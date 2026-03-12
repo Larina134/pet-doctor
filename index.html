@@ -119,10 +119,14 @@
       <div class="qitem">
         <div class="q">病况补充（可多选）</div>
         <div class="opts" data-key="add">
+          <!-- 原有选项保留，新增更多补充选项 -->
           <span>发烧</span><span>不吃饭</span><span>不喝水</span><span>嗜睡</span><span>腹痛弓背</span>
           <span>发抖</span><span>口臭</span><span>眼屎多</span><span>流鼻涕</span><span>瘙痒</span>
           <span>消瘦</span><span>腹水肚大</span><span>黄疸</span><span>尿频</span><span>尿血</span>
           <span>尿不出</span><span>咳嗽</span><span>喘</span><span>跛行</span><span>掉毛</span>
+          <span>多饮多尿</span><span>呕吐</span><span>拉稀</span><span>便秘</span><span>流口水</span>
+          <span>牙龈出血</span><span>牙齿发黄</span><span>皮肤红疹</span><span>腹部胀大</span><span>抽搐</span>
+          <span>呕吐虫体</span><span>肛门瘙痒</span><span>呼吸急促</span><span>不吃不喝</span><span>精神萎靡</span>
         </div>
       </div>
     </div>
@@ -319,27 +323,42 @@ document.getElementById('startQ').addEventListener('click', function() {
   showUsePet();
 });
 
-// 诊断逻辑（保持之前优化版）
-// 诊断逻辑（优化版：融合主诉+补充症状，覆盖所有疾病百科）
+// ========== 核心优化：诊断逻辑 ==========
 document.getElementById('makeR').addEventListener('click', function() {
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
-  let sym = document.getElementById('sym').value.toLowerCase(); // 转小写方便匹配
+  let symRaw = document.getElementById('sym').value.toLowerCase();
   let day = Array.from(sel.day||[])[0] || "未选择";
-  let add = Array.from(sel.add||[]).join(' ').toLowerCase() || "无补充"; // 转小写
+  let addRaw = Array.from(sel.add||[]).join(' ').toLowerCase() || "无补充";
+
+  // 优化1：症状同义词替换（让识别更灵活）
+  const synonymMap = {
+    "吐": "呕吐", "拉肚子": "拉稀", "拉肚子": "腹泻", "没精神": "精神萎靡",
+    "不吃东西": "不吃饭", "喝得多": "多饮", "尿得多": "多尿", "牙黄": "牙齿发黄",
+    "牙龈肿": "牙龈出血", "喘不上气": "呼吸急促", "肚子胀": "腹部胀大",
+    "抽": "抽搐", "掉毛多": "掉毛", "流口水多": "流口水", "眼屎多": "眼部分泌物多"
+  };
+  // 替换所有同义词
+  let sym = symRaw;
+  let add = addRaw;
+  Object.keys(synonymMap).forEach(key => {
+    sym = sym.replace(new RegExp(key, 'g'), synonymMap[key]);
+    add = add.replace(new RegExp(key, 'g'), synonymMap[key]);
+  });
+
   let r = `【${pet.name}｜${pet.type}｜诊断报告】
 ——————————————
 档案：${pet.breed} ${pet.age} ${pet.weight}kg
 疫苗：${pet.vac1} 狂犬：${pet.vac2}
 驱虫：体内${pet.de1} 体外${pet.de2}
-主诉：${sym}
+主诉：${symRaw}
 病程：${day}
-补充：${add}
+补充：${addRaw}
 ——————————————
 `;
   let hasDanger = false;
-  let hasDiagnosis = false; // 标记是否识别到疾病
+  let hasDiagnosis = false;
 
-  // 通用症状匹配（先匹配主诉，再匹配补充）
+  // 优化2：重构症状匹配规则，慢性肾衰需要多个症状叠加
   const symptomMap = {
     // 传染病
     "猫瘟|猫泛白细胞减少症": {
@@ -451,7 +470,12 @@ document.getElementById('makeR').addEventListener('click', function() {
       danger: pet.type === "猫" ? true : false
     },
     "慢性肾病|肾衰": {
-      match: /肾病|肾衰|多饮多尿|口臭|消瘦/,
+      // 优化3：肾衰必须同时满足口臭 + 多饮多尿/消瘦/呕吐 中的至少一项
+      match: function(s, a) {
+        const hasBadBreath = /口臭/.test(s) || /口臭/.test(a);
+        const hasOtherSym = /多饮多尿|消瘦|呕吐|精神萎靡/.test(s) || /多饮多尿|消瘦|呕吐|精神萎靡/.test(a);
+        return hasBadBreath && hasOtherSym;
+      },
       info: `【慢性肾病/肾衰】
 • 症状：多饮多尿、呕吐、口臭、消瘦、精神差
 • 治疗：处方粮、补液、护肾、降磷
@@ -461,7 +485,7 @@ document.getElementById('makeR').addEventListener('click', function() {
 
     // 消化系统
     "肠胃炎": {
-      match: /肠胃炎|呕吐|拉稀|腹痛/,
+      match: /肠胃炎|呕吐|拉稀|腹痛|腹泻/,
       info: `【肠胃炎】
 • 症状：呕吐、拉稀、腹痛、精神差
 • 治疗：禁食、补液、益生菌、止吐止泻
@@ -501,7 +525,7 @@ document.getElementById('makeR').addEventListener('click', function() {
       danger: true
     },
 
-    // 口腔疾病（重点补充牙结石）
+    // 口腔疾病（重点：口臭优先匹配牙结石）
     "牙结石|牙周炎": {
       match: /牙结石|牙周炎|口臭|牙齿黄|牙龈出血|牙齿松动/,
       info: `【牙结石/牙周炎】
@@ -586,9 +610,18 @@ document.getElementById('makeR').addEventListener('click', function() {
     }
   };
 
-  // 遍历症状映射表，匹配主诉或补充症状
+  // 遍历症状映射表进行匹配
   for (const [diseaseName, config] of Object.entries(symptomMap)) {
-    if (config.match.test(sym) || config.match.test(add)) {
+    let isMatch = false;
+    // 处理函数类型的匹配规则（如肾衰）
+    if (typeof config.match === 'function') {
+      isMatch = config.match(sym, add);
+    } else {
+      // 处理正则表达式类型的匹配规则
+      isMatch = config.match.test(sym) || config.match.test(add);
+    }
+
+    if (isMatch) {
       r += config.info + "\n\n";
       hasDiagnosis = true;
       if (config.danger) hasDanger = true;
