@@ -150,17 +150,23 @@
 </div>
 
 <script>
-// 导航
+// 导航 - 修复核心问题：确保点击切换页面正常
 document.querySelectorAll('.nav span').forEach(n=>{
-  n.onclick=()=>{
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
-    document.querySelectorAll('.nav span').forEach(s=>s.classList.remove('on'));
-    n.classList.add('on');
-    document.getElementById('p'+n.dataset.p).classList.add('show');
-    if(n.dataset.p==1) loadPetList();
-    if(n.dataset.p==4) loadHis();
-    if(n.dataset.p==5) loadDisease();
-  }
+  n.addEventListener('click', function() {
+    // 移除所有页面的show类和导航的on类
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+    document.querySelectorAll('.nav span').forEach(s => s.classList.remove('on'));
+    // 给当前点击的导航加on类，对应页面加show类
+    this.classList.add('on');
+    const targetPage = document.getElementById('p' + this.dataset.p);
+    if (targetPage) {
+      targetPage.classList.add('show');
+    }
+    // 按需加载对应数据
+    if(this.dataset.p==1) loadPetList();
+    if(this.dataset.p==4) loadHis();
+    if(this.dataset.p==5) loadDisease();
+  });
 })
 
 // 存储 KEY
@@ -180,6 +186,7 @@ function loadPetList(){
       <p>${p.breed}｜${p.age}｜${p.weight}kg</p>
     </div>
   `).join('');
+  // 删除宠物
   box.querySelectorAll('.del').forEach(d=>{
     d.onclick=(e)=>{
       e.stopPropagation();
@@ -190,6 +197,7 @@ function loadPetList(){
       loadPetList();
     }
   })
+  // 选择宠物进入诊断页
   box.querySelectorAll('.pet-card').forEach(c=>{
     c.onclick=()=>{
       let id = c.querySelector('.del').dataset.id;
@@ -201,7 +209,7 @@ function loadPetList(){
 }
 
 // 新增宠物
-document.getElementById('newPet').onclick=()=>{
+document.getElementById('newPet').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
@@ -210,10 +218,10 @@ document.getElementById('newPet').onclick=()=>{
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
   document.querySelector('[data-p="2"]').click();
-}
+});
 
 // 清空表单
-document.getElementById('resetForm').onclick=()=>{
+document.getElementById('resetForm').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
@@ -221,10 +229,10 @@ document.getElementById('resetForm').onclick=()=>{
   document.getElementById('page').value='';
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
-}
+});
 
 // 保存档案
-document.getElementById('savePet').onclick=async ()=>{
+document.getElementById('savePet').addEventListener('click', async function() {
   let id = document.getElementById('editId').value || Date.now();
   let name = document.getElementById('pname').value;
   if(!name){alert("请填写宠物名");return;}
@@ -256,7 +264,7 @@ document.getElementById('savePet').onclick=async ()=>{
   localStorage.setItem(PETS, JSON.stringify(list));
   alert("保存成功！返回档案室选择宠物。");
   document.querySelector('[data-p="1"]').click();
-}
+});
 
 // 显示当前宠物
 function showUsePet(){
@@ -270,36 +278,38 @@ function showUsePet(){
   `;
 }
 
-// 选项：病程单选
+// 选项：病程单选/多选
 let sel = {};
 document.querySelectorAll('.opts').forEach(g=>{
   g.querySelectorAll('span').forEach(s=>{
-    s.onclick=()=>{
+    s.addEventListener('click', function() {
       if(g.dataset.key === "day"){
+        // 单选逻辑
         g.querySelectorAll('span').forEach(x=>x.classList.remove('sel'));
-        s.classList.add('sel');
-        sel[g.dataset.key] = new Set([s.innerText]);
+        this.classList.add('sel');
+        sel[g.dataset.key] = new Set([this.innerText]);
       } else {
-        s.classList.toggle('sel');
+        // 多选逻辑
+        this.classList.toggle('sel');
         let k = g.dataset.key;
         if(!sel[k]) sel[k]=new Set();
-        sel[k].has(s.innerText) ? sel[k].delete(s.innerText) : sel[k].add(s.innerText);
+        sel[k].has(this.innerText) ? sel[k].delete(this.innerText) : sel[k].add(this.innerText);
       }
-    }
+    });
   })
 })
 
 // 开始问诊
-document.getElementById('startQ').onclick=()=>{
+document.getElementById('startQ').addEventListener('click', function() {
   if(!sessionStorage.getItem('usePet')){alert("请先选宠物");return;}
   if(!document.getElementById('sym').value){alert("请输入症状");return;}
   document.getElementById('qbox').style.display='block';
   document.getElementById('makeR').style.display='block';
   showUsePet();
-}
+});
 
 // 诊断逻辑（保持之前优化版）
-document.getElementById('makeR').onclick=()=>{
+document.getElementById('makeR').addEventListener('click', function() {
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
   let sym = document.getElementById('sym').value;
   let day = Array.from(sel.day||[])[0] || "未选择";
@@ -401,11 +411,12 @@ document.getElementById('makeR').onclick=()=>{
   r += `\n——————————————\n仅供参考，不能替代兽医面诊`;
   document.getElementById('report').innerHTML = r;
   document.getElementById('report').style.display = 'block';
+  // 保存诊疗记录
   let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
   hs.unshift({id:Date.now(),name:pet.name,type:pet.type,t:new Date().toLocaleString(),text:r});
   if(hs.length>60) hs.pop();
   localStorage.setItem(HIS, JSON.stringify(hs));
-}
+});
 
 // 加载诊疗记录
 function loadHis(){
@@ -421,29 +432,27 @@ function loadHis(){
       <div class="his-body">${h.text}</div>
     </div>
   `).join('');
+  // 删除诊疗记录
   box.querySelectorAll('.delHis').forEach(b=>{
-    b.onclick=()=>{
+    b.addEventListener('click', function() {
       if(!confirm("删除该记录？"))return;
       let arr = JSON.parse(localStorage.getItem(HIS)||"[]");
-      arr = arr.filter(x=>x.id!=b.dataset.id);
+      arr = arr.filter(x=>x.id!=this.dataset.id);
       localStorage.setItem(HIS, JSON.stringify(arr));
       loadHis();
-    }
+    });
   })
+  // 展开/收起诊疗记录
   box.querySelectorAll('.his-top').forEach(t=>{
-    t.onclick=()=>{
-      let body = t.nextElementSibling;
+    t.addEventListener('click', function() {
+      let body = this.nextElementSibling;
       body.style.display = body.style.display=="none"?"block":"none";
-    }
+    });
   })
 }
 
 // --------------------------
-// 【完整猫狗疾病百科（含你所有疾病+详细解读）】
-// --------------------------
-const diseases = [
-// --------------------------
-// 【100% 完整猫狗疾病百科（无遗漏版）】
+// 【完整猫狗疾病百科（含所有疾病+详细解读）】
 // --------------------------
 const diseases = [
   // 猫 全部常见/高发/致命疾病
@@ -604,7 +613,7 @@ const diseases = [
   {name:"犬腺病毒",type:"狗",info:`【症状】肝炎/肺炎、咳嗽、发热
 【治疗】对症治疗
 【预防】犬四联/八联疫苗`},
-  {name:"犬副流感",type:"dog",info:`【症状】咳嗽、喷嚏、发热
+  {name:"犬副流感",type:"狗",info:`【症状】咳嗽、喷嚏、发热
 【治疗】止咳、抗炎`},
   {name:"犬窝咳",type:"狗",info:`【症状】空洞样咳嗽、干呕
 【治疗】止咳、抗炎
@@ -661,6 +670,7 @@ const diseases = [
 【预防】科学喂养`}
 ];
 
+// 加载疾病百科
 function loadDisease(){
   let box = document.getElementById('dList');
   box.innerHTML = diseases.map((d,i)=>`
@@ -671,24 +681,37 @@ ${d.info}
       </div>
     </div>
   `).join('');
+  // 展开/收起疾病详情
   box.querySelectorAll('.d-item').forEach(it=>{
-    it.onclick=()=>{
-      let b = it.querySelector('.d-body');
+    it.addEventListener('click', function() {
+      let b = this.querySelector('.d-body');
       b.style.display = b.style.display=="none"?"block":"none";
-    }
+    });
   })
 }
 
-document.getElementById('searchD').oninput=e=>{
+// 疾病百科搜索功能
+document.getElementById('searchD').addEventListener('input', function(e) {
   let kw = e.target.value.toLowerCase();
   let arr = diseases.filter(d=>d.name.toLowerCase().includes(kw) || d.info.toLowerCase().includes(kw));
-  document.getElementById('dList').innerHTML = arr.map((d,i)=>`
-    <div class="d-item"><h4>${d.name}｜${d.type}</h4><div class="d-body">${d.info}</div></div>
+  let box = document.getElementById('dList');
+  box.innerHTML = arr.map((d,i)=>`
+    <div class="d-item">
+      <h4>${d.name}｜${d.type}</h4>
+      <div class="d-body">${d.info}</div>
+    </div>
   `).join('');
-}
+  // 重新绑定展开/收起事件
+  box.querySelectorAll('.d-item').forEach(it=>{
+    it.addEventListener('click', function() {
+      let b = this.querySelector('.d-body');
+      b.style.display = b.style.display=="none"?"block":"none";
+    });
+  });
+});
 
-// X光识别
-document.getElementById('xrayFile').addEventListener('change', async (e)=>{
+// X光识别功能
+document.getElementById('xrayFile').addEventListener('change', async function(e) {
   let file = e.target.files[0];
   if(!file) return;
   let src = await new Promise(r=>{
@@ -702,9 +725,9 @@ document.getElementById('xrayFile').addEventListener('change', async (e)=>{
 • 胸腔：肺部纹理清晰
 • 腹部：肠管积气，未见梗阻
 仅供参考`;
-})
+});
 
-// 初始加载
+// 初始加载档案室数据
 loadPetList();
 </script>
 </body>
