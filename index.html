@@ -50,6 +50,12 @@
   .xray-preview{width:100%;height:220px;border:2px dashed #ffc4d8;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#f8f8f8;}
   .xray-preview img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
   .xray-result{margin-top:12px;padding:12px;background:#fff;border-radius:8px;line-height:1.5;font-size:13px;white-space:pre-line;}
+  /* 新增：多选框样式 */
+  .his-checkbox{width:16px;height:16px;margin-right:8px;cursor:pointer;}
+  .delete-controls{display:flex;gap:10px;margin-bottom:10px;}
+  .delete-controls button{flex:1;padding:12px;border-radius:10px;border:none;font-size:15px;cursor:pointer;}
+  .btn-select-all{background:#ffc4d8;color:#a0003c;}
+  .btn-confirm-delete{background:#ff4444;color:#fff;}
 </style>
 </head>
 <body>
@@ -125,11 +131,14 @@
     <div class="report" id="report"></div>
   </div>
 
-  <!-- 4 诊疗记录 -->
+  <!-- 4 诊疗记录 - 核心修改区域 -->
   <div class="page" id="p4">
     <div class="tit">诊疗记录</div>
-    <!-- 新增：一键清空按钮 -->
-    <button class="btn btn3" id="clearAllHis" style="margin-bottom:10px;">一键清空所有诊疗记录</button>
+    <!-- 修改：替换一键清空为多选删除控件 -->
+    <div class="delete-controls" id="deleteControls" style="display:none;">
+      <button class="btn-select-all" id="selectAllBtn">全选/取消全选</button>
+      <button class="btn-confirm-delete" id="confirmDeleteBtn">确定删除选中记录</button>
+    </div>
     <div id="hisList"></div>
   </div>
 
@@ -420,21 +429,37 @@ document.getElementById('makeR').addEventListener('click', function() {
   localStorage.setItem(HIS, JSON.stringify(hs));
 });
 
-// 加载诊疗记录
+// 加载诊疗记录 - 核心修改：添加多选框
 function loadHis(){
   let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
   let box = document.getElementById('hisList');
-  if(hs.length===0){box.innerHTML="<div style=padding:10px>暂无记录</div>";return;}
+  let deleteControls = document.getElementById('deleteControls');
+  
+  // 控制删除控件显示/隐藏
+  if(hs.length===0){
+    box.innerHTML="<div style=padding:10px>暂无记录</div>";
+    deleteControls.style.display = 'none';
+    return;
+  }
+  
+  // 显示删除控件
+  deleteControls.style.display = 'flex';
+  
+  // 渲染带多选框的诊疗记录
   box.innerHTML = hs.map(h=>`
     <div class="his-item">
       <div class="his-top">
-        <h4>${h.name}（${h.type}）｜${h.t}</h4>
-        <button class="delHis" data-id="${h.id}">删除</button>
+        <div style="display:flex;align-items:center;">
+          <input type="checkbox" class="his-checkbox" data-id="${h.id}">
+          <h4>${h.name}（${h.type}）｜${h.t}</h4>
+        </div>
+        <button class="delHis" data-id="${h.id}">删除单条</button>
       </div>
       <div class="his-body">${h.text}</div>
     </div>
   `).join('');
-  // 删除诊疗记录
+  
+  // 保留原单条删除功能
   box.querySelectorAll('.delHis').forEach(b=>{
     b.addEventListener('click', function() {
       if(!confirm("删除该记录？"))return;
@@ -443,15 +468,50 @@ function loadHis(){
       localStorage.setItem(HIS, JSON.stringify(arr));
       loadHis();
     });
-  })
+  });
+  
   // 展开/收起诊疗记录
   box.querySelectorAll('.his-top').forEach(t=>{
-    t.addEventListener('click', function() {
+    t.addEventListener('click', function(e) {
+      // 点击多选框时不触发展开/收起
+      if(e.target.classList.contains('his-checkbox')) return;
       let body = this.nextElementSibling;
       body.style.display = body.style.display=="none"?"block":"none";
     });
-  })
+  });
 }
+
+// 新增：全选/取消全选功能
+document.getElementById('selectAllBtn').addEventListener('click', function() {
+  let checkboxes = document.querySelectorAll('.his-checkbox');
+  let isAllSelected = Array.from(checkboxes).every(cb => cb.checked);
+  
+  checkboxes.forEach(cb => {
+    cb.checked = !isAllSelected;
+  });
+});
+
+// 新增：确认删除选中记录功能
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+  let selectedCheckboxes = document.querySelectorAll('.his-checkbox:checked');
+  
+  if(selectedCheckboxes.length === 0){
+    alert('请先选择要删除的诊疗记录！');
+    return;
+  }
+  
+  if(!confirm(`确定要删除选中的 ${selectedCheckboxes.length} 条诊疗记录吗？此操作不可恢复！`)) return;
+  
+  // 获取选中记录的ID并删除
+  let selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
+  let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
+  hs = hs.filter(h => !selectedIds.includes(h.id.toString()));
+  localStorage.setItem(HIS, JSON.stringify(hs));
+  
+  // 重新加载列表
+  loadHis();
+  alert(`成功删除 ${selectedCheckboxes.length} 条诊疗记录！`);
+});
 
 // --------------------------
 // 【完整猫狗疾病百科（含所有疾病+详细解读）】
@@ -658,18 +718,6 @@ document.getElementById('xrayFile').addEventListener('change', async function(e)
 • 胸腔：肺部纹理清晰
 • 腹部：肠管积气，未见梗阻
 仅供参考`;
-});
-
-// 新增：一键清空所有诊疗记录功能
-document.getElementById('clearAllHis').addEventListener('click', function() {
-  // 二次确认，防止误操作
-  if(!confirm('确定要清空所有诊疗记录吗？此操作不可恢复！')) return;
-  // 清空本地存储的诊疗记录
-  localStorage.setItem(HIS, '[]');
-  // 重新加载诊疗记录列表（页面会显示“暂无记录”）
-  loadHis();
-  // 提示操作成功
-  alert('所有诊疗记录已清空！');
 });
 
 // 初始加载档案室数据
