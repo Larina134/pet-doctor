@@ -545,7 +545,7 @@ function getDurationWeight(dayText, diseaseDuration) {
   return 1;
 }
 
-// 核心修复2：重构诊断规则，修复吐黄沫/牙黄牙疼的错误诊断
+// 核心修复2：重构诊断规则，扩展更多疾病识别能力
 document.getElementById('makeR').addEventListener('click', function() {
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
   let originalSym = document.getElementById('sym').value.trim(); // 保留原始输入
@@ -648,92 +648,360 @@ document.getElementById('makeR').addEventListener('click', function() {
   let hasDanger = false;
   let hasDiagnosis = false;
   
-  // 核心修复3：重构诊断规则库，修正错误匹配逻辑
+  // 大幅扩展诊断规则库，覆盖百科中的所有主要疾病
   const rules = [
-    // 新增：呕吐胆汁/胃炎（吐黄沫专属）- 优先级最高
-    {
-      name:"呕吐胆汁/急性胃炎",
-      cond:()=>true,
-      symptoms:["呕吐胆汁","胃炎","肠胃刺激"],
-      excludeSymptoms:["抽搐","流口水","腹部胀大","干呕"], // 排除中毒/胃扭转特征
-      duration:"1天内",
-      info:"【呕吐胆汁/急性胃炎（最常见）】\n• 症状：吐黄沫/黄水、空腹呕吐、精神尚可\n• 原因：空腹过久、饮食刺激、轻微肠胃不适\n• 治疗：禁食6-8小时、少量多次喂温水、益生菌调理\n• 注意：非中毒/胃扭转典型症状",
-      danger:false,
-      matchScore: 0
-    },
-    // 猫专属
+    // ========== 猫专属疾病 ==========
     {
       name:"猫瘟",
       cond:()=>isCat && isUnvaccinated,
-      symptoms:["高烧","呕吐","便血"],
+      symptoms:["高烧","呕吐","便血","白细胞减少","脱水"],
       duration:"1-2周",
-      info:"【猫瘟】\n• 症状：高烧、呕吐、便血、白细胞骤降\n• 治疗：住院抗病毒、止血、补液\n• 预防：疫苗",
+      info:"【猫瘟（猫泛白细胞减少症）】\n• 症状：高烧、呕吐、便血、白细胞骤降、脱水\n• 治疗：住院输液、抗病毒、止血、止吐、抗生素\n• 预防：疫苗，每年加强",
       danger:true,
       matchScore: 0
     },
     {
       name:"猫鼻支",
       cond:()=>isCat,
-      symptoms:["流鼻涕","眼屎多","咳嗽","发烧"],
+      symptoms:["流鼻涕","眼屎多","咳嗽","发烧","喷嚏","流泪"],
       duration:"2周以上",
-      info:"【猫鼻支（猫疱疹病毒）】\n• 症状：喷嚏、流脓涕、眼红肿、流泪\n• 治疗：抗病毒药、滴眼液、营养支持\n• 预防：疫苗",
+      info:"【猫鼻支（猫疱疹病毒）】\n• 症状：喷嚏、流脓涕、眼红肿、流泪、发热\n• 治疗：抗病毒药、滴眼液、营养支持\n• 预防：疫苗",
       danger:false,
       matchScore: 0
     },
-    // 狗专属
+    {
+      name:"猫杯状病毒",
+      cond:()=>isCat,
+      symptoms:["口炎","流口水","喷嚏","跛行","发烧"],
+      duration:"1-2周",
+      info:"【猫杯状病毒】\n• 症状：口炎、流口水、喷嚏、跛行、发热\n• 治疗：止痛、口腔护理、营养支持\n• 预防：疫苗",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"猫传染性腹膜炎(FIP)",
+      cond:()=>isCat,
+      symptoms:["腹水肚大","发烧","消瘦","黄疸","贫血"],
+      duration:"2周以上",
+      info:"【猫传染性腹膜炎（FIP）】\n• 症状：腹大胸水、发烧消瘦、黄疸、贫血\n• 治疗：靶向药、营养支持\n• 预防：减少应激",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"猫白血病(FeLV)",
+      cond:()=>isCat,
+      symptoms:["贫血","消瘦","发烧","精神萎靡"],
+      duration:"2周以上",
+      info:"【猫白血病（FeLV）】\n• 症状：贫血、消瘦、发热、免疫力下降\n• 治疗：对症支持、增强免疫\n• 预防：疫苗、避免接触病猫",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"猫免疫缺陷病毒(FIV/猫艾滋)",
+      cond:()=>isCat,
+      symptoms:["口炎","消瘦","精神萎靡","反复感染"],
+      duration:"2周以上",
+      info:"【猫免疫缺陷病毒（FIV/猫艾滋）】\n• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"猫哮喘",
+      cond:()=>isCat,
+      symptoms:["喘","咳嗽","呼吸急促","腹式呼吸"],
+      duration:"2周以上",
+      info:"【猫哮喘】\n• 症状：喘、咳嗽、呼吸急促、腹式呼吸\n• 治疗：抗炎、雾化、支气管扩张剂\n• 预防：减少粉尘、应激",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"猫特发性口炎",
+      cond:()=>isCat,
+      symptoms:["口炎","流口水","拒食","口臭"],
+      duration:"2周以上",
+      info:"【猫特发性口炎】\n• 症状：口腔大面积溃烂、剧痛、流口水、拒食\n• 治疗：消炎、止痛、部分拔牙、免疫调节\n• 预防：定期口腔护理",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"猫脂肪肝",
+      cond:()=>isCat,
+      symptoms:["不吃饭","黄疸","呕吐","消瘦"],
+      duration:"1-2周",
+      info:"【猫脂肪肝】\n• 症状：突发不进食、黄疸、呕吐、消瘦\n• 治疗：强制喂食、保肝、营养支持\n• 预防：避免长期不进食",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"猫肥厚性心肌病",
+      cond:()=>isCat,
+      symptoms:["呼吸急促","喘","运动不耐"],
+      duration:"2周以上",
+      info:"【猫肥厚性心肌病】\n• 症状：呼吸急促、运动不耐、猝死\n• 治疗：心脏药物、控制心率\n• 预防：定期心超",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"猫动脉血栓",
+      cond:()=>isCat,
+      symptoms:["后腿瘫痪","疼痛","爪垫冰冷"],
+      duration:"1天内",
+      info:"【猫动脉血栓】\n• 症状：后腿突然瘫痪、疼痛、爪垫冰冷\n• 治疗：急症，立即抗凝、止痛\n• 预防：心脏疾病管理",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"公猫尿闭",
+      cond:()=>isCat && isMale && !isSterile,
+      symptoms:["尿频","尿不出","惨叫","呕吐","腹胀"],
+      duration:"1天内",
+      info:"【公猫尿闭】\n• 症状：频繁蹲盆、无尿、惨叫、呕吐、腹胀\n• 治疗：24h致死，必须立刻导尿\n• 预防：多喝水、湿粮、减肥、减压",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"百合中毒",
+      cond:()=>isCat,
+      symptoms:["呕吐","多饮多尿","精神萎靡"],
+      duration:"1天内",
+      info:"【百合中毒】\n• 症状：呕吐、肾衰、死亡\n• 治疗：立即催吐、住院透析\n• 预防：猫环境严禁摆放百合",
+      danger:true,
+      matchScore: 0
+    },
+
+    // ========== 狗专属疾病 ==========
     {
       name:"犬细小",
       cond:()=>isDog && isUnvaccinated,
-      symptoms:["高烧","呕吐","便血"],
+      symptoms:["高烧","呕吐","便血","腥臭","脱水"],
       duration:"1-2周",
-      info:"【犬细小病毒】\n• 症状：剧烈呕吐、腥臭血便、脱水、白细胞下降\n• 治疗：立即住院、抗病毒、大量补液\n• 预防：完整疫苗",
+      info:"【犬细小病毒】\n• 症状：剧烈呕吐、腥臭血便、脱水、精神萎靡\n• 治疗：立即就医、禁水禁食、大量补液\n• 预防：疫苗",
       danger:true,
       matchScore: 0
     },
     {
       name:"犬瘟热",
       cond:()=>isDog && isUnvaccinated,
-      symptoms:["高烧","眼屎多","咳嗽","抽搐"],
-      excludeSymptoms:["牙齿","牙黄","牙疼","口腔"], // 核心修复：排除口腔症状匹配
+      symptoms:["高烧","眼屎多","咳嗽","抽搐","脚垫硬"],
+      excludeSymptoms:["牙齿","牙黄","牙疼","口腔"],
       duration:"2周以上",
-      info:"【犬瘟热】\n• 症状：双相热、脓眼屎、咳嗽、后期抽搐\n• 注意：犬瘟热不直接导致牙疼/牙黄\n• 治疗：单抗、补液、营养\n• 预防：疫苗",
+      info:"【犬瘟热】\n• 症状：双相热、脓眼屎、咳嗽、脚垫硬、后期抽搐\n• 注意：犬瘟热不直接导致牙疼/牙黄\n• 治疗：单抗、干扰素、补液\n• 预防：疫苗",
       danger:true,
       matchScore: 0
     },
-    // 核心修复：修正胃扭转诊断规则
+    {
+      name:"犬窝咳",
+      cond:()=>isDog,
+      symptoms:["咳嗽","干呕","精神尚可"],
+      duration:"4-7天",
+      info:"【犬窝咳】\n• 症状：空洞样咳嗽、干呕、精神尚可\n• 治疗：止咳、抗炎\n• 预防：疫苗、保暖",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"犬副流感",
+      cond:()=>isDog,
+      symptoms:["咳嗽","流鼻涕","发烧","精神差"],
+      duration:"1-2周",
+      info:"【犬副流感】\n• 症状：咳嗽、流涕、发热、精神差\n• 治疗：对症止咳、抗炎、抗病毒\n• 预防：疫苗",
+      danger:false,
+      matchScore: 0
+    },
     {
       name:"胃扭转",
-      cond:()=>isDog && (dogSize === "large" || dogSize === "middle"), // 仅限大中型犬
-      symptoms:["腹部胀大","干呕","呼吸急促"], // 核心：干呕（不是呕吐）
-      excludeSymptoms:["呕吐胆汁","吐黄沫","吐黄水"], // 排除黄沫/黄水症状
+      cond:()=>isDog && (dogSize === "large" || dogSize === "middle"),
+      symptoms:["腹部胀大","干呕","呼吸急促"],
+      excludeSymptoms:["呕吐胆汁","吐黄沫","吐黄水"],
       duration:"1天内",
       info:"【胃扭转（致命急症）】\n• 典型症状：腹部胀大、干呕（吐不出来）、呼吸急促\n• 注意：吐黄沫/黄水不是胃扭转特征\n• 治疗：几分钟致死，立即手术\n• 预防：少食多餐，饭后不剧烈运动",
       danger:true,
       matchScore: 0
     },
-    // 核心修复：修正中毒诊断规则
     {
-      name:"中毒",
-      cond:()=>true,
-      symptoms:["呕吐","抽搐","流口水","牙龈发白","牙龈发紫","昏迷"], // 必须有神经/循环症状
-      excludeSymptoms:["呕吐胆汁","吐黄沫","吐黄水"], // 排除黄沫/黄水症状
-      duration:"1天内",
-      info:"【中毒（急症）】\n• 典型症状：呕吐+抽搐/流口水/牙龈异常/昏迷\n• 注意：仅吐黄沫/黄水不是中毒特征\n• 治疗：立即催吐送医\n• 预防：远离有毒物品",
+      name:"犬心丝虫",
+      cond:()=>isDog,
+      symptoms:["咳嗽","喘","腹水肚大","运动不耐"],
+      duration:"2周以上",
+      info:"【犬心丝虫】\n• 症状：咳嗽、气喘、运动不耐、腹水\n• 治疗：无特效药，预防为主\n• 预防：每月驱虫",
       danger:true,
       matchScore: 0
     },
-    // 核心修复：强化口腔疾病规则
     {
-      name:"牙结石牙周炎",
+      name:"气管塌陷",
+      cond:()=>isDog && dogSize === "small",
+      symptoms:["咳嗽","鹅叫样","运动后喘"],
+      duration:"2周以上",
+      info:"【气管塌陷】\n• 症状：鹅叫样咳嗽、运动后喘\n• 治疗：抗炎、止咳、减重\n• 预防：避免脖链勒颈",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"莱姆病",
+      cond:()=>isDog,
+      symptoms:["发烧","关节肿痛","精神差"],
+      duration:"1-2周",
+      info:"【莱姆病】\n• 症状：发热、关节肿痛、精神差\n• 治疗：抗生素\n• 预防：定期驱虫、防蜱虫",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"钩端螺旋体病",
+      cond:()=>isDog,
+      symptoms:["发烧","黄疸","尿血","肝肾损伤"],
+      duration:"1-2周",
+      info:"【钩端螺旋体病】\n• 症状：发热、黄疸、血尿、肝肾损伤\n• 治疗：抗生素、保肝护肾\n• 预防：疫苗、避免接触污染水源",
+      danger:true,
+      matchScore: 0
+    },
+
+    // ========== 共患疾病 ==========
+    {
+      name:"狂犬病",
       cond:()=>true,
-      symptoms:["口臭","牙齿发黄","牙龈出血","牙疼","牙黄"],
-      excludeSymptoms:["高烧","抽搐","眼屎多"], // 排除犬瘟热症状
+      symptoms:["狂躁","流口水","攻击","瘫痪"],
+      duration:"2周以上",
+      info:"【狂犬病（可传染人）】\n• 症状：狂躁、流口水、攻击、瘫痪\n• 治疗：100%致死，无药可治\n• 预防：狂犬疫苗",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"跳蚤/蜱虫/螨虫感染",
+      cond:()=>true,
+      symptoms:["瘙痒","掉毛","皮肤红疹","贫血"],
+      duration:"2周以上",
+      info:"【跳蚤/蜱虫/螨虫】\n• 症状：瘙痒、掉毛、皮肤损伤、贫血\n• 治疗：体外驱虫、环境消毒\n• 预防：每月体外驱虫",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"体内蠕虫感染",
+      cond:()=>true,
+      symptoms:["拉稀","消瘦","呕吐虫体","便血"],
+      duration:"2周以上",
+      info:"【体内蠕虫感染】\n• 症状：拉稀、消瘦、呕吐虫体、便血\n• 治疗：体内驱虫药\n• 预防：定期体内驱虫",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"贾第虫感染",
+      cond:()=>true,
+      symptoms:["软便","黏液便","反复腹泻"],
+      duration:"2周以上",
+      info:"【贾第虫（可传染人）】\n• 症状：反复软便、黏液便、腹泻\n• 治疗：抗原虫药\n• 预防：干净饮水",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"猫癣狗癣",
+      cond:()=>true,
+      symptoms:["圆形掉毛","皮屑","瘙痒"],
+      duration:"2周以上",
+      info:"【猫癣狗癣（可传染人）】\n• 症状：圆形掉毛、皮屑、瘙痒\n• 治疗：药浴、抗真菌药\n• 预防：干燥环境",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"脓皮症/湿疹",
+      cond:()=>true,
+      symptoms:["皮肤红疹","脓包","破皮","异味"],
+      duration:"1-2周",
+      info:"【脓皮症/湿疹】\n• 症状：红疹、脓包、破皮、异味\n• 治疗：抗生素、局部护理",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"胰腺炎",
+      cond:()=>true && isFat,
+      symptoms:["腹痛弓背","呕吐","不吃饭","油腻饮食史"],
+      duration:"4-7天",
+      info:"【胰腺炎（重症）】\n• 症状：腹痛弓背、呕吐、拒食、油腻饮食史\n• 治疗：立即禁食、止痛、护胰\n• 预防：低脂饮食",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"消化道异物梗阻",
+      cond:()=>true,
+      symptoms:["呕吐","便秘","腹胀","腹痛"],
+      duration:"1-2周",
+      info:"【消化道异物梗阻】\n• 症状：呕吐、便秘、腹胀、腹痛\n• 治疗：拍片、手术/内镜取出\n• 预防：避免啃咬异物",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"泌尿结石",
+      cond:()=>true,
+      symptoms:["尿频","尿血","尿痛"],
+      duration:"1-2周",
+      info:"【泌尿结石】\n• 症状：尿频、尿血、尿痛\n• 治疗：消炎、溶石、手术\n• 预防：多喝水",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"膀胱炎/尿路感染",
+      cond:()=>true,
+      symptoms:["尿频","尿血","频繁蹲盆"],
+      duration:"1-2周",
+      info:"【膀胱炎/尿路感染】\n• 症状：尿频、轻微尿血、频繁蹲盆\n• 治疗：消炎、利尿、多喝水\n• 预防：增加饮水",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"肾脏功能衰竭",
+      cond:()=>true && isOld,
+      symptoms:["口臭","多饮多尿","体重下降","呕吐"],
+      duration:"2周以上",
+      info:"【肾脏功能衰竭】\n• 症状：口臭氨味、多饮多尿、体重下降、呕吐\n• 治疗：护肾、输液、低磷饮食\n• 预防：定期体检",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"子宫蓄脓",
+      cond:()=>isFemale && !isSterile,
+      symptoms:["腹部胀大","生殖器流脓","多饮多尿"],
+      duration:"2周以上",
+      info:"【子宫蓄脓（母畜）】\n• 症状：腹部胀大、生殖器流脓、多饮多尿\n• 治疗：必须急诊手术\n• 预防：尽早绝育",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"关节/椎间盘问题",
+      cond:()=>true && (isOld || isFat),
+      symptoms:["跛行","疼痛","瘫痪","起身困难"],
+      duration:"2周以上",
+      info:"【关节/椎间盘问题】\n• 症状：跛行、疼痛、瘫痪、起身困难\n• 治疗：止痛、手术、康复\n• 预防：控制体重",
+      danger:false,
+      matchScore: 0
+    },
+    {
+      name:"中毒",
+      cond:()=>true,
+      symptoms:["呕吐","抽搐","尿血","昏迷"],
+      excludeSymptoms:["呕吐胆汁","吐黄沫","吐黄水"],
+      duration:"1天内",
+      info:"【中毒（急症）】\n• 症状：呕吐+抽搐/流口水/牙龈异常/昏迷\n• 注意：仅吐黄沫/黄水不是中毒特征\n• 治疗：立即催吐送医\n• 预防：远离有毒物品",
+      danger:true,
+      matchScore: 0
+    },
+    {
+      name:"牙结石/牙周炎",
+      cond:()=>true,
+      symptoms:["口臭","牙齿发黄","牙龈出血","牙疼"],
+      excludeSymptoms:["高烧","抽搐","眼屎多"],
       duration:"2周以上",
       info:"【牙结石/牙周炎】\n• 症状：口臭、牙齿发黄、牙龈出血、牙疼\n• 原因：口腔清洁差、牙菌斑堆积\n• 注意：牙疼/牙黄与犬瘟热无关\n• 治疗：洁牙、消炎、日常刷牙\n• 预防：定期口腔护理",
       danger:false,
       matchScore: 0
     },
-    // 其他共患病（保留原有逻辑）
+    {
+      name:"呕吐胆汁/急性胃炎",
+      cond:()=>true,
+      symptoms:["呕吐胆汁","吐黄沫","吐黄水","空腹呕吐"],
+      excludeSymptoms:["抽搐","流口水","腹部胀大","干呕"],
+      duration:"1天内",
+      info:"【呕吐胆汁/急性胃炎（最常见）】\n• 症状：吐黄沫/黄水、空腹呕吐、精神尚可\n• 原因：空腹过久、饮食刺激、轻微肠胃不适\n• 治疗：禁食6-8小时、少量多次喂温水、益生菌调理\n• 注意：非中毒/胃扭转典型症状",
+      danger:false,
+      matchScore: 0
+    },
     {
       name:"肠胃炎",
       cond:()=>true,
@@ -742,15 +1010,6 @@ document.getElementById('makeR').addEventListener('click', function() {
       duration:"2-3天",
       info:"【肠胃炎】\n• 症状：呕吐、拉稀、精神一般\n• 治疗：禁食、益生菌、护胃\n• 预防：规律饮食",
       danger:false,
-      matchScore: 0
-    },
-    {
-      name:"胰腺炎",
-      cond:()=>true,
-      symptoms:["腹痛弓背","呕吐"],
-      duration:"4-7天",
-      info:"【胰腺炎（重症）】\n• 症状：腹痛弓背、呕吐、油腻饮食史\n• 治疗：立即禁食、止痛、护胰\n• 预防：低脂饮食",
-      danger:true,
       matchScore: 0
     }
   ];
@@ -799,10 +1058,10 @@ document.getElementById('makeR').addEventListener('click', function() {
     rule.matchScore = calculateMatchScore(rule);
   });
 
-  // 只取前3个高匹配疾病（优先显示最相关的）
+  // 只取前5个高匹配疾病（扩展到5个，覆盖更多可能）
   const matchedRules = rules.filter(rule => rule.matchScore > 5)
                             .sort((a, b) => b.matchScore - a.matchScore)
-                            .slice(0, 3);
+                            .slice(0, 5);
 
   // 生成诊断结果
   if (matchedRules.length > 0) {
@@ -818,9 +1077,10 @@ document.getElementById('makeR').addEventListener('click', function() {
   // 无匹配时的默认提示
   if(!hasDiagnosis){
     r += `【未匹配高风险疾病】
-• 大概率为轻度应激/消化不良/口腔清洁问题
+• 大概率为轻度应激/消化不良/口腔清洁问题/皮肤轻微感染
 • 建议：
   - 若为吐黄沫/黄水：禁食6-8小时+益生菌调理
+  - 若为皮肤瘙痒：体外驱虫+皮肤护理
   - 若为牙疼/牙黄：加强口腔清洁，定期刷牙
 • 若出现加重（高烧、拒食、呼吸困难）请立即就医\n`;
   }
