@@ -1256,8 +1256,11 @@ document.getElementById('xrayFile').addEventListener('change',function(e){
   res.innerHTML = "【AI 影像分析中...】\n\n骨骼结构：未见明显骨折\n胸腔：心肺轮廓正常\n腹腔：未见明显异物\n提示：仅供参考，需兽医结合临床确诊";
 });
 
-// 页面初始化
-checkLogin();
+// 页面初始化 - 修复：等待DOM完全加载后执行
+document.addEventListener('DOMContentLoaded', function() {
+  checkLogin();
+});
+ 
 </script>
 </body>
 </html>
