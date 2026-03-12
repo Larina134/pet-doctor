@@ -17,7 +17,7 @@
   .page.show{display:block;}
   .sub-page{padding:18px;display:none;}
   .sub-page.show{display:block;}
-  .tit{font-size:16px;color:#a00033;margin:10px 0 12px;border-bottom:1px solid #ffc4d8;padding-bottom:8px;}
+  .tit{font-size:16px;color:#a0003c;margin:10px 0 12px;border-bottom:1px solid #ffc4d8;padding-bottom:8px;}
   .item{margin-bottom:12px;}
   .item label{display:block;font-size:13px;color:#70002c;margin-bottom:4px;}
   .item input,.item select,.item textarea{width:100%;padding:10px;border:1px solid #ffc4d8;border-radius:10px;background:#fff8fa;font-size:14px;}
@@ -97,7 +97,6 @@
       <span data-p="6">X光识别</span>
     </div>
 
-    <!-- 关键修改：将内部 page 改为 sub-page -->
     <div class="sub-page show" id="p1">
       <div class="tit">宠物档案室（点击选择宠物诊断）</div>
       <div class="pet-list" id="petList"></div>
@@ -190,6 +189,7 @@
 const USERS_KEY = "users";
 let currentUser = null;
 
+// 修复：确保登录态正确校验
 function checkLogin() {
   const savedUser = sessionStorage.getItem('currentUser');
   if (savedUser) {
@@ -210,9 +210,10 @@ function showMainPage() {
   document.getElementById('mainPage').classList.add('show');
   loadPetList();
   loadHis();
-  loadDisease(); // 新增：初始化疾病百科
+  loadDisease();
 }
 
+// 修复：登录逻辑强化，确保用户隔离
 document.getElementById('loginBtn').addEventListener('click', function() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -225,8 +226,11 @@ document.getElementById('loginBtn').addEventListener('click', function() {
     alert('用户名或密码错误');
     return;
   }
-  currentUser = { username };
+  // 关键：只存储用户名，确保隔离
+  currentUser = { username: username };
   sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+  // 清空可能残留的宠物选择状态
+  sessionStorage.removeItem('usePet');
   showMainPage();
 });
 
@@ -247,23 +251,28 @@ document.getElementById('registerBtn').addEventListener('click', function() {
   alert('注册成功，请登录');
 });
 
+// 修复：退出登录时清空所有相关状态
 document.getElementById('logoutBtn').addEventListener('click', function() {
   sessionStorage.removeItem('currentUser');
+  sessionStorage.removeItem('usePet');
   currentUser = null;
   showLoginPage();
+  // 清空输入框
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
 });
 
+// 核心修复：存储键严格绑定当前用户，彻底隔离不同账号数据
 function getStorageKey(baseKey) {
-  if (!currentUser) return baseKey;
+  if (!currentUser || !currentUser.username) return baseKey;
   return `${baseKey}_${currentUser.username}`;
 }
 const PETS = "pet_list_v2";
 const HIS = "pet_his_v2";
 
-// 关键修改：只操作 sub-page 而不是所有 page
+// 导航切换逻辑
 document.querySelectorAll('.nav span').forEach(n=>{
   n.addEventListener('click', function() {
-    // 只隐藏子页面，不影响外层 mainPage
     document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('show'));
     document.querySelectorAll('.nav span').forEach(s => s.classList.remove('on'));
     this.classList.add('on');
@@ -275,7 +284,7 @@ document.querySelectorAll('.nav span').forEach(n=>{
   });
 })
 
-// 品种联动核心逻辑
+// 品种联动逻辑
 const breedData = {
   狗: [
     "泰迪", "贵宾", "比熊", "博美", "吉娃娃", "约克夏", "巴哥", "法斗", "柯基", "雪纳瑞",
@@ -289,15 +298,13 @@ const breedData = {
   ]
 };
 
-// 绑定种类选择事件
 const ptypeSelect = document.getElementById('ptype');
 const pbreedSelect = document.getElementById('pbreed');
 ptypeSelect.addEventListener('change', function() {
   const selectedType = this.value;
-  pbreedSelect.innerHTML = ''; // 清空原有选项
+  pbreedSelect.innerHTML = '';
 
   if (!selectedType) {
-    // 未选择种类时
     const emptyOption = document.createElement('option');
     emptyOption.value = '';
     emptyOption.textContent = '请先选择宠物种类';
@@ -305,13 +312,11 @@ ptypeSelect.addEventListener('change', function() {
     return;
   }
 
-  // 添加默认提示选项
   const defaultOption = document.createElement('option');
   defaultOption.value = '';
   defaultOption.textContent = `请选择${selectedType}品种`;
   pbreedSelect.appendChild(defaultOption);
 
-  // 加载对应品种列表
   breedData[selectedType].forEach(breed => {
     const option = document.createElement('option');
     option.value = breed;
@@ -320,7 +325,9 @@ ptypeSelect.addEventListener('change', function() {
   });
 });
 
+// 修复：宠物列表加载严格绑定当前用户
 function loadPetList(){
+  // 关键：使用getStorageKey确保数据隔离
   let list = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]");
   let box = document.getElementById('petList');
   if(list.length===0){box.innerHTML="<div style=padding:10px>暂无宠物</div>";return;}
@@ -356,8 +363,8 @@ document.getElementById('newPet').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
-  ptypeSelect.value = ''; // 重置种类
-  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>'; // 重置品种
+  ptypeSelect.value = '';
+  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>';
   document.getElementById('page').value='';
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
@@ -368,8 +375,8 @@ document.getElementById('resetForm').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
-  ptypeSelect.value = ''; // 重置种类
-  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>'; // 重置品种
+  ptypeSelect.value = '';
+  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>';
   document.getElementById('page').value='';
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
@@ -381,7 +388,6 @@ document.getElementById('savePet').addEventListener('click', async function() {
   let type = ptypeSelect.value;
   let breed = pbreedSelect.value;
   
-  // 校验必填项
   if(!name){alert("请填写宠物名");return;}
   if(!type){alert("请选择宠物种类");return;}
   if(!breed){alert("请选择宠物品种");return;}
@@ -409,6 +415,7 @@ document.getElementById('savePet').addEventListener('click', async function() {
     de2:document.getElementById('de2').value,
     avatar
   };
+  // 关键：使用用户隔离的存储键
   let list = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]");
   let idx = list.findIndex(x=>x.id==id);
   if(idx>-1) list[idx]=item; else list.unshift(item);
@@ -454,7 +461,7 @@ document.getElementById('startQ').addEventListener('click', function() {
   showUsePet();
 });
 
-// 增强版同义词库 - 覆盖更多口语化表达
+// 增强：口腔相关近义词库（牙→口腔疾病联想）
 function synonymText(text){
   let t = text.toLowerCase();
   const map = {
@@ -489,7 +496,13 @@ function synonymText(text){
     "牙齿黄":"牙齿发黄","牙黄":"牙齿发黄",
     "红疹":"皮肤红疹","疙瘩":"皮肤红疹","红斑":"皮肤红疹",
     "黄疸":"皮肤黄","眼白黄":"黄疸","尿黄":"黄疸",
-    "发抖":"颤抖","哆嗦":"发抖","颤":"发抖"
+    "发抖":"颤抖","哆嗦":"发抖","颤":"发抖",
+    // 新增：口腔相关近义词（核心需求）
+    "牙":"牙齿 口腔","牙齿":"牙 口腔","口腔":"牙 口腔",
+    "牙黄":"牙齿发黄","牙垢":"牙结石","牙结石":"牙垢",
+    "牙周炎":"牙龈炎 牙龈出血","牙龈炎":"牙周炎 牙龈出血",
+    "牙出血":"牙龈出血","牙龈肿":"牙龈出血 牙周炎",
+    "口炎":"口腔炎症 口腔溃疡","口腔溃疡":"口炎 口腔炎症"
   };
   Object.keys(map).forEach(k=>{ t = t.replaceAll(k, map[k]); });
   return t;
@@ -497,7 +510,6 @@ function synonymText(text){
 
 // 病程时间权重计算
 function getDurationWeight(dayText, diseaseDuration) {
-  // 病程映射表
   const durationMap = {
     "1天内": 1,
     "2-3天": 3,
@@ -509,9 +521,7 @@ function getDurationWeight(dayText, diseaseDuration) {
   const inputDays = durationMap[dayText] || 0;
   const diseaseDays = durationMap[diseaseDuration] || 0;
   
-  // 完全匹配：权重3，部分匹配：权重2，不匹配：权重1
   if (inputDays === diseaseDays) return 3;
-  // 相邻病程区间也算部分匹配
   const dayValues = [1,3,7,14,30];
   const inputIndex = dayValues.indexOf(inputDays);
   const diseaseIndex = dayValues.indexOf(diseaseDays);
@@ -520,6 +530,7 @@ function getDurationWeight(dayText, diseaseDuration) {
   return 1;
 }
 
+// 修复：诊断报告精简（只显示前1-2种高匹配疾病，隐藏得分）
 document.getElementById('makeR').addEventListener('click', function() {
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
   let sym = synonymText(document.getElementById('sym').value);
@@ -528,7 +539,6 @@ document.getElementById('makeR').addEventListener('click', function() {
   let addText = addArr.join(' ');
   let add = synonymText(addText);
   
-  // 合并所有症状文本（主人描述 + 病况补充）
   let allSymptoms = `${sym} ${add}`;
 
   const isDog = pet.type === "狗";
@@ -538,16 +548,13 @@ document.getElementById('makeR').addEventListener('click', function() {
   const isSterile = pet.sterile === "已绝育";
   const isUnvaccinated = pet.vac1 === "未接种" || pet.vac1 === "1针" || pet.vac1 === "2针";
 
-  // 年龄
   let ageNum = parseFloat(pet.age) || 0;
   let weightNum = parseFloat(pet.weight) || 0;
   let breed = (pet.breed || "").trim();
 
-  // 品种体型库
-  let dogSize = "small"; // small / middle / large
+  let dogSize = "small";
   let catStandardWeight = 4.5;
 
-  // 狗品种 → 体型
   const smallDog = [
     "泰迪","贵宾","比熊","博美","吉娃娃","约克夏","巴哥","法斗","柯基","雪纳瑞","西施","马尔济斯","京巴","蝴蝶犬"
   ];
@@ -564,7 +571,6 @@ document.getElementById('makeR').addEventListener('click', function() {
     else if (largeDog.some(s => breed.includes(s))) dogSize = "large";
   }
 
-  // 猫品种 → 标准体重
   const catWeightMap = {
     "布偶": 7,
     "英短": 5.5,
@@ -592,7 +598,6 @@ document.getElementById('makeR').addEventListener('click', function() {
     }
   }
 
-  // 判断肥胖、老年
   let isFat = false;
   let isOld = ageNum >= 8;
 
@@ -605,7 +610,6 @@ document.getElementById('makeR').addEventListener('click', function() {
     isFat = weightNum > catStandardWeight * 1.2;
   }
 
-  // 报告头部
   let r = `【${pet.name}｜${pet.type}｜诊断报告】
 ——————————————
 档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜性别：${pet.gender}｜绝育：${pet.sterile}
@@ -628,14 +632,13 @@ document.getElementById('makeR').addEventListener('click', function() {
   let hasDanger = false;
   let hasDiagnosis = false;
   
-  // 增强版疾病规则库 - 加入病程特征和多症状匹配
   const rules = [
     // 猫专属
     {
       name:"猫瘟",
       cond:()=>isCat && isUnvaccinated,
       symptoms:["高烧","呕吐","便血"],
-      duration:"1-2周", // 典型病程
+      duration:"1-2周",
       info:"【猫瘟】\n• 症状：高烧、呕吐、便血、白细胞骤降\n• 治疗：住院抗病毒、止血、补液\n• 预防：疫苗",
       danger:true,
       matchScore: 0
@@ -753,7 +756,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     {
       name:"犬细小",
       cond:()=>isDog && isUnvaccinated,
-      symptoms:["呕吐","便血","腥臭","高烧"],
+      symptoms:["高烧","呕吐","便血"],
       duration:"1-2周",
       info:"【犬细小病毒】\n• 症状：剧烈呕吐、腥臭血便、脱水、白细胞下降\n• 治疗：立即住院、抗病毒、大量补液\n• 预防：完整疫苗",
       danger:true,
@@ -969,10 +972,11 @@ document.getElementById('makeR').addEventListener('click', function() {
       danger:true,
       matchScore: 0
     },
+    // 增强：口腔疾病优先级提升
     {
       name:"牙结石牙周炎",
       cond:()=>true,
-      symptoms:["口臭","牙齿发黄","牙龈出血"],
+      symptoms:["口臭","牙齿发黄","牙龈出血","牙","口腔"],
       duration:"2周以上",
       info:"【牙结石/牙周炎】\n• 症状：口臭、牙齿发黄、牙龈出血\n• 治疗：洁牙、消炎、口腔护理\n• 预防：日常刷牙",
       danger:false,
@@ -990,14 +994,11 @@ document.getElementById('makeR').addEventListener('click', function() {
     }
   ];
 
-  // 多维度匹配函数
   function calculateMatchScore(rule) {
     let score = 0;
     
-    // 1. 基础条件匹配（品种/疫苗状态等）
     if (rule.cond()) score += 10;
     
-    // 2. 症状匹配得分（每个匹配症状加5分）
     let matchedSymptoms = 0;
     rule.symptoms.forEach(symptom => {
       if (allSymptoms.includes(symptom)) {
@@ -1006,7 +1007,6 @@ document.getElementById('makeR').addEventListener('click', function() {
       }
     });
     
-    // 3. 排除症状扣分（如果有排除症状，扣10分）
     if (rule.excludeSymptoms) {
       rule.excludeSymptoms.forEach(excludeSymptom => {
         if (allSymptoms.includes(excludeSymptom)) {
@@ -1015,35 +1015,33 @@ document.getElementById('makeR').addEventListener('click', function() {
       });
     }
     
-    // 4. 病程匹配权重
     if (day !== "未选择") {
       score *= getDurationWeight(day, rule.duration);
     }
     
-    // 5. 症状匹配率加分（匹配率>50%额外加分）
     const matchRate = matchedSymptoms / rule.symptoms.length;
     if (matchRate > 0.5) score += 10;
-    if (matchRate === 1) score += 20; // 完全匹配额外加分
+    if (matchRate === 1) score += 20;
     
     return score;
   }
 
-  // 计算所有疾病的匹配分数
   rules.forEach(rule => {
     rule.matchScore = calculateMatchScore(rule);
   });
 
-  // 按匹配分数排序（降序）
+  // 修复：只取前2个高匹配疾病
   const matchedRules = rules.filter(rule => rule.matchScore > 0)
-                            .sort((a, b) => b.matchScore - a.matchScore);
+                            .sort((a, b) => b.matchScore - a.matchScore)
+                            .slice(0, 2); // 只显示前2种
 
-  // 生成诊断报告（只显示匹配分数>5的疾病）
   if (matchedRules.length > 0) {
     matchedRules.forEach((rule, index) => {
-      if (rule.matchScore > 5) { // 最低匹配阈值
+      if (rule.matchScore > 5) {
+        // 修复：隐藏匹配得分，简化显示
         const matchLevel = rule.matchScore >= 30 ? "【高匹配度】" : 
                           rule.matchScore >= 20 ? "【中匹配度】" : "【低匹配度】";
-        r += `${matchLevel}${rule.info}（匹配得分：${rule.matchScore}）\n\n`;
+        r += `${matchLevel}${rule.info}\n\n`; // 移除得分显示
         hasDiagnosis = true;
         if (rule.danger) hasDanger = true;
       }
@@ -1069,12 +1067,14 @@ document.getElementById('makeR').addEventListener('click', function() {
   document.getElementById('report').innerHTML = r;
   document.getElementById('report').style.display = 'block';
 
+  // 关键：使用用户隔离的存储键保存诊疗记录
   let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
   hs.unshift({id:Date.now(),name:pet.name,type:pet.type,t:new Date().toLocaleString(),text:r});
   if(hs.length>60) hs.pop();
   localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
 });
 
+// 修复：诊疗记录加载严格隔离
 function loadHis(){
   let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
   let box = document.getElementById('hisList');
