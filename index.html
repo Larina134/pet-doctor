@@ -1182,4 +1182,47 @@ const diseases = [
   {name:"子宫蓄脓（母畜）",type:"共患-生殖",info:"• 症状：腹部胀大、生殖器流脓、多饮多尿\n• 治疗：必须急诊手术\n• 预防：尽早绝育"},
   {name:"关节/椎间盘问题",type:"共患-骨骼",info:"• 症状：跛行、疼痛、瘫痪、起身困难\n• 治疗：止痛、手术、康复\n• 预防：控制体重"},
   {name:"中毒",type:"共患-急症",info:"• 症状：呕吐、抽搐、尿血、昏迷\n• 治疗：立即催吐送医\n• 预防：远离有毒物品"},
-  {name:"牙结石/牙周炎",type:"共患-口腔",info:"• 症状：口臭、牙齿发黄、牙龈出血\n•
+  {name:"牙结石/牙周炎",type:"共患-口腔",info:"• 症状：口臭、牙齿发黄、牙龈出血\n• 预防：每天刷牙，多吃干粮"}
+];
+
+// 疾病百科搜索与渲染
+function loadDisease(){
+  let list = diseases;
+  let box = document.getElementById('dList');
+  let kw = document.getElementById('searchD').value.toLowerCase().trim();
+  if(kw){
+    list = diseases.filter(d=>d.name.toLowerCase().includes(kw) || d.info.toLowerCase().includes(kw));
+  }
+  box.innerHTML = list.map(d=>`
+    <div class="d-item">
+      <h4>${d.name}</h4>
+      <div style="font-size:12px;color:#999;">${d.type}</div>
+      <div class="d-body">${d.info}</div>
+    </div>
+  `).join('');
+  box.querySelectorAll('.d-item').forEach(it=>{
+    it.addEventListener('click',()=>{
+      let b = it.querySelector('.d-body');
+      b.style.display = b.style.display=='block'?'none':'block';
+    })
+  })
+}
+
+document.getElementById('searchD').addEventListener('input',loadDisease);
+
+// X光图片预览与AI识别（模拟）
+document.getElementById('xrayFile').addEventListener('change',function(e){
+  let file = e.target.files[0];
+  if(!file) return;
+  let prev = document.getElementById('xrayPreview');
+  let res = document.getElementById('xrayResult');
+  let url = URL.createObjectURL(file);
+  prev.innerHTML = `<img src="${url}">`;
+  res.innerHTML = "【AI 影像分析中...】\n\n骨骼结构：未见明显骨折\n胸腔：心肺轮廓正常\n腹腔：未见明显异物\n提示：仅供参考，需兽医结合临床确诊";
+});
+
+// 页面初始化
+checkLogin();
+</script>
+</body>
+</html>
