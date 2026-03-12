@@ -128,6 +128,8 @@
   <!-- 4 诊疗记录 -->
   <div class="page" id="p4">
     <div class="tit">诊疗记录</div>
+    <!-- 新增：一键清空按钮 -->
+    <button class="btn btn3" id="clearAllHis" style="margin-bottom:10px;">一键清空所有诊疗记录</button>
     <div id="hisList"></div>
   </div>
 
@@ -543,9 +545,9 @@ const diseases = [
 【预防】少食多餐，饭后不剧烈运动`},
 
   // 呼吸道
-  {name:"肺炎",type:"通用",info:`【症状】高烧、咳喘、腹式呼吸、精神差
+  {name:"肺炎",type:"",info:`【症状】高烧、咳喘、腹式呼吸、精神差
 【治疗】抗生素、吸氧、住院护理`},
-  {name:"哮喘/支气管炎",type:"通用",info:`【症状】喘、咳嗽、呼吸急促
+  {name:"哮喘/支气管炎",type:"",info:`【症状】喘、咳嗽、呼吸急促
 【治疗】抗炎、支气管扩张剂`},
 
   // 骨骼关节
@@ -656,6 +658,18 @@ document.getElementById('xrayFile').addEventListener('change', async function(e)
 • 胸腔：肺部纹理清晰
 • 腹部：肠管积气，未见梗阻
 仅供参考`;
+});
+
+// 新增：一键清空所有诊疗记录功能
+document.getElementById('clearAllHis').addEventListener('click', function() {
+  // 二次确认，防止误操作
+  if(!confirm('确定要清空所有诊疗记录吗？此操作不可恢复！')) return;
+  // 清空本地存储的诊疗记录
+  localStorage.setItem(HIS, '[]');
+  // 重新加载诊疗记录列表（页面会显示“暂无记录”）
+  loadHis();
+  // 提示操作成功
+  alert('所有诊疗记录已清空！');
 });
 
 // 初始加载档案室数据
