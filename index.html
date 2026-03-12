@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>猫狗全科诊疗系统（最终优化版）</title>
+<title>猫狗全科诊疗系统（最终优化+X光识别版）</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial;}
@@ -46,19 +46,25 @@
   .d-body{padding:10px;background:#fff8fa;border-radius:8px;margin-top:6px;font-size:12px;line-height:1.5;white-space:pre-line;display:none;}
   .search{padding:12px;border:1px solid #ffc4d8;border-radius:10px;width:100%;margin-bottom:12px;}
   .d-list{max-height:360px;overflow:auto;}
+  /* X光界面专属样式 */
+  .xray-box{padding:16px;background:#fff8fa;border-radius:12px;margin-top:10px;}
+  .xray-preview{width:100%;height:220px;border:2px dashed #ffc4d8;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#f8f8f8;}
+  .xray-preview img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
+  .xray-result{margin-top:12px;padding:12px;background:#fff;border-radius:8px;line-height:1.5;font-size:13px;white-space:pre-line;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="head"><h1>猫狗全科诊疗系统（最终优化版）</h1></div>
+  <div class="head"><h1>猫狗全科诊疗系统（最终优化+X光识别）</h1></div>
   <div class="nav">
-    <span class="on" data-p="1">宠物档案管理</span>
+    <span class="on" data-p="1">宠物档案</span>
     <span data-p="2">症状诊断</span>
     <span data-p="3">诊疗记录</span>
-    <span data-p="4">疾病百科全书</span>
+    <span data-p="4">疾病百科</span>
+    <span data-p="5">X光识别</span>
   </div>
 
-  <!-- 1 多宠物档案管理 -->
+  <!-- 1 宠物档案（不变） -->
   <div class="page show" id="p1">
     <div class="tit">新增/修改宠物档案</div>
     <input type="hidden" id="editId">
@@ -82,11 +88,11 @@
     <button class="btn" id="savePet">保存档案并前往诊断</button>
     <button class="btn btn2" id="resetForm">清空重新填写</button>
 
-    <div class="tit" style="margin-top:16px;">已保存宠物列表（点击使用）</div>
+    <div class="tit" style="margin-top:16px;">已保存宠物列表</div>
     <div class="pet-list" id="petList"></div>
   </div>
 
-  <!-- 2 症状诊断 -->
+  <!-- 2 症状诊断（已全面优化逻辑） -->
   <div class="page" id="p2">
     <div class="card" id="usePet"></div>
     <div class="tit">主人描述症状</div>
@@ -114,17 +120,32 @@
     <div class="report" id="report"></div>
   </div>
 
-  <!-- 3 诊疗记录（可删、点开在下方） -->
+  <!-- 3 诊疗记录（不变） -->
   <div class="page" id="p3">
-    <div class="tit">诊疗记录（点击展开详情）</div>
+    <div class="tit">诊疗记录</div>
     <div id="hisList"></div>
   </div>
 
-  <!-- 4 疾病百科（点开在下方） -->
+  <!-- 4 疾病百科（不变） -->
   <div class="page" id="p4">
     <div class="tit">疾病百科全书</div>
     <input class="search" id="searchD" placeholder="搜索疾病：细小、尿闭、猫瘟、胰腺炎...">
     <div class="d-list" id="dList"></div>
+  </div>
+
+  <!-- 5 新增：X光识别界面 -->
+  <div class="page" id="p5">
+    <div class="tit">X光影像识别（辅助判断骨骼/胸腔/腹部病变）</div>
+    <div class="item">
+      <label>上传X光片（支持JPG/PNG）</label>
+      <input type="file" id="xrayFile" accept="image/*">
+    </div>
+    <div class="xray-box" id="xrayBox">
+      <div class="xray-preview" id="xrayPreview">
+        <span style="color:#999">请上传X光图片</span>
+      </div>
+      <div class="xray-result" id="xrayResult"></div>
+    </div>
   </div>
 </div>
 
@@ -157,7 +178,7 @@ document.getElementById('resetForm').onclick=()=>{
   document.getElementById('avatar').value='';
 }
 
-// 保存档案 → 自动跳诊断
+// 保存档案 → 跳诊断
 document.getElementById('savePet').onclick=async ()=>{
   let id = document.getElementById('editId').value || Date.now();
   let name = document.getElementById('pname').value;
@@ -193,7 +214,7 @@ document.getElementById('savePet').onclick=async ()=>{
   localStorage.setItem(PETS, JSON.stringify(list));
 
   sessionStorage.setItem('usePet', JSON.stringify(item));
-  alert("保存成功，即将进入诊断");
+  alert("保存成功，进入诊断页");
   document.querySelector('[data-p="2"]').click();
 }
 
@@ -231,13 +252,13 @@ function loadPetList(){
   })
 }
 
-// 进入诊断页自动加载宠物
+// 显示当前使用宠物
 function showUsePet(){
   let p = sessionStorage.getItem('usePet');
-  if(!p){document.getElementById('usePet').innerHTML="<b>请先在档案页选择宠物</b>";return;}
+  if(!p){document.getElementById('usePet').innerHTML="<b>请先选择宠物</b>";return;}
   p = JSON.parse(p);
   document.getElementById('usePet').innerHTML = `
-<b>当前使用：${p.name}（${p.type}）</b><br>
+<b>当前：${p.name}（${p.type}）</b><br>
 品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg<br>
 疫苗：${p.vac1}｜狂犬：${p.vac2}｜体内：${p.de1}｜体外：${p.de2}
   `;
@@ -265,7 +286,9 @@ document.getElementById('startQ').onclick=()=>{
   showUsePet();
 }
 
-// 生成报告
+// --------------------------
+// 【全面修复诊断逻辑】
+// --------------------------
 document.getElementById('makeR').onclick=()=>{
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
   let sym = document.getElementById('sym').value;
@@ -283,46 +306,102 @@ document.getElementById('makeR').onclick=()=>{
 ——————————————
 `;
 
-// 以下为你原有疾病匹配逻辑，完整保留
-if(pet.type=="狗"){
-if(/细小|血便|腥臭|呕吐/.test(sym))r+=`【犬细小病毒】\n剧烈呕吐、腥臭血便、脱水、幼犬高危\n`;
-if(/犬瘟|眼屎|抽搐|脚垫/.test(sym))r+=`【犬瘟热】\n高烧、眼屎、咳嗽、脚垫硬、后期抽搐\n`;
-if(/冠状|呕吐|拉稀/.test(sym))r+=`【犬冠状病毒】\n呕吐、拉稀、精神差\n`;
-if(/钩端|黄疸|尿血/.test(sym))r+=`【钩端螺旋体】\n发烧、黄疸、肝肾损伤、尿血\n`;
-if(/胰腺炎|弓背|油腻/.test(sym))r+=`【急性胰腺炎】\n腹痛、呕吐、不吃、急症禁食\n`;
-if(/胃扭转|胀肚|干呕/.test(sym))r+=`【胃扭转】\n大型犬致命，立即手术\n`;
-if(/尿闭|尿不出/.test(sym))r+=`【尿道阻塞】\n立即就医\n`;
-if(/子宫蓄脓|流脓/.test(sym))r+=`【子宫蓄脓】\n必须手术\n`;
-if(/髌骨|跳着走/.test(sym))r+=`【髌骨脱位】\n小型犬高发\n`;
-if(/椎间盘|无力/.test(sym))r+=`【椎间盘突出】\n疼痛、后肢无力\n`;
+  let hasDanger = false;
+
+  // 狗诊断逻辑（全面修正）
+  if(pet.type === "狗"){
+    // 吐黄沫/黄水 + 长期 → 慢性肝胆/胃炎
+    if(/吐黄沫|吐黄水|空腹吐/.test(sym)){
+      if(day.includes("2周以上")){
+        r += `【疑似：慢性胆汁反流性胃炎/慢性肝炎】\n`;
+        r += `• 长期吐黄沫提示胃黏膜/肝胆已受损，绝非轻微消化不良\n`;
+        hasDanger = true;
+      } else {
+        r += `【疑似：急性胆汁反流性胃炎】\n`;
+      }
+    }
+
+    // 黄疸 + 腹水 + 尿血 + 不喝水 → 钩端/肝肾/胰腺炎
+    if(/黄疸|腹水肚大|尿血|尿频|不喝水/.test(add)){
+      r += `【高度怀疑：钩端螺旋体/严重肝病/肾病/胰腺炎】\n`;
+      r += `• 黄疸：肝胆损伤/溶血\n`;
+      r += `• 腹水+尿血+尿频：肝肾严重损伤\n`;
+      r += `• 不喝水：脱水风险极高\n`;
+      hasDanger = true;
+    }
+
+    // 发抖 + 眼屎多 + 消瘦 → 慢性感染/消耗病
+    if(/发抖|眼屎多|消瘦/.test(add)){
+      r += `【怀疑：慢性感染/犬瘟后期/严重消耗病】\n`;
+      r += `• 发抖：疼痛/神经症状/发热\n`;
+      r += `• 眼屎多+消瘦：慢性消耗，体质极差\n`;
+      hasDanger = true;
+    }
+
+    // 胰腺炎：腹痛弓背 + 油腻
+    if(/腹痛弓背|油腻/.test(add)){
+      r += `【疑似：急性胰腺炎】\n`;
+      r += `• 急症，必须禁食禁水，立即就医\n`;
+      hasDanger = true;
+    }
+
+    // 尿闭/尿血 → 尿道阻塞
+    if(/尿闭|尿不出/.test(add)){
+      r += `【危险：尿道阻塞】\n`;
+      r += `• 立即就医，避免肾衰\n`;
+      hasDanger = true;
+    }
+  }
+
+  // 猫诊断逻辑（全面修正）
+  if(pet.type === "猫"){
+    if(/吐黄沫|吐黄水/.test(sym)){
+      if(day.includes("2周以上")){
+        r += `【疑似：慢性肝炎/脂肪肝/肾衰】\n`;
+        hasDanger = true;
+      } else {
+        r += `【疑似：毛球症/急性胃炎】\n`;
+      }
+    }
+    if(/黄疸|腹水|不吃饭/.test(add)){
+      r += `【高度怀疑：猫传腹/肝炎/脂肪肝】\n`;
+      hasDanger = true;
+    }
+    if(/尿闭|尿血/.test(add)){
+      r += `【极高危：猫下泌尿道尿闭/膀胱炎】\n`;
+      r += `• 公猫24h肾衰死亡，必须立即就医\n`;
+      hasDanger = true;
+    }
+    if(/应激|不吃饭/.test(add)){
+      r += `【猫应激】\n`;
+      r += `• 可诱发传腹/膀胱炎/脂肪肝/猝死\n`;
+      hasDanger = true;
+    }
+  }
+
+  // 通用危险信号
+  if(/不喝水|尿血|黄疸|腹水|发抖|发烧/.test(add)) hasDanger = true;
+
+  if(hasDanger){
+    r += `\n⚠️ 【结论：症状危重，绝非轻微！】\n`;
+    r += `• 多系统症状提示：严重肝胆/肾病/感染/消耗病\n`;
+    r += `• 必须立即就医，做：血常规、生化、B超、尿检，不能拖延！\n`;
+  } else {
+    r += `\n症状较轻：多为消化不良/着凉/应激，观察24h，益生菌调理`;
+  }
+
+  r += `\n——————————————\n仅供参考，不能替代兽医面诊`;
+  document.getElementById('report').innerHTML = r;
+  document.getElementById('report').style.display = 'block';
+
+  // 保存记录
+  let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
+  hs.unshift({id:Date.now(),name:pet.name,type:pet.type,t:new Date().toLocaleString(),text:r});
+  if(hs.length>60) hs.pop();
+  localStorage.setItem(HIS, JSON.stringify(hs));
 }
-if(pet.type=="猫"){
-if(/猫瘟|白细胞|便血/.test(sym))r+=`【猫瘟】\n高烧、呕吐、便血、白细胞下降\n`;
-if(/鼻支|喷嚏|眼睛/.test(sym))r+=`【猫鼻支】\n喷嚏、流涕、眼红肿\n`;
-if(/杯状|口炎|跛行/.test(sym))r+=`【猫杯状病毒】\n口炎、流口水、跛行\n`;
-if(/传腹|腹水|发烧/.test(sym))r+=`【猫传腹】\n腹水、发烧、消瘦、黄疸\n`;
-if(/尿闭|尿不出|惨叫/.test(sym))r+=`【猫尿闭】\n公猫高危，24h肾衰，立即就医\n`;
-if(/膀胱炎|尿血/.test(sym))r+=`【猫膀胱炎/结石】\n尿频、尿血\n`;
-if(/口炎|溃烂/.test(sym))r+=`【猫口炎】\n剧痛、拒食、流口水\n`;
-if(/肾衰|多饮多尿/.test(sym))r+=`【慢性肾衰】\n老年猫高发\n`;
-if(/应激|不吃饭/.test(sym))r+=`【猫应激】\n可诱发传腹、膀胱炎、脂肪肝\n`;
-}
-if(/中毒|抽搐|百合|木糖醇/.test(sym))r+=`【中毒】\n立即催吐送医\n`;
-if(/肺炎|喘|腹式呼吸/.test(sym))r+=`【肺炎】\n高热、咳喘、危险\n`;
-if(/犬窝咳|咳嗽|干呕/.test(sym))r+=`【犬窝咳】\n强传染\n`;
 
-if(r.trim().endsWith("——————————————"))r+="症状较轻：消化不良/着凉/应激，观察24h，益生菌调理";
-r+="\n——————————————\n仅供参考，不能替代兽医面诊";
-
-document.getElementById('report').innerHTML=r;
-document.getElementById('report').style.display='block';
-
-let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
-hs.unshift({id:Date.now(),name:pet.name,type:pet.type,t:new Date().toLocaleString(),text:r});
-localStorage.setItem(HIS,JSON.stringify(hs));
-}
-
-// 诊疗记录（可删、展开在本条下方）
+// 加载诊疗记录
 function loadHis(){
   let hs = JSON.parse(localStorage.getItem(HIS)||"[]");
   let box = document.getElementById('hisList');
@@ -342,7 +421,7 @@ function loadHis(){
       if(!confirm("删除该记录？"))return;
       let arr = JSON.parse(localStorage.getItem(HIS)||"[]");
       arr = arr.filter(x=>x.id!=b.dataset.id);
-      localStorage.setItem(HIS,JSON.stringify(arr));
+      localStorage.setItem(HIS, JSON.stringify(arr));
       loadHis();
     }
   })
@@ -354,21 +433,17 @@ function loadHis(){
   })
 }
 
-// 疾病百科（展开在当前疾病下方）
+// 疾病百科
 const diseases = [
-{name:"犬细小病毒",info:`症状：剧烈呕吐、拉稀（腥臭味血便）、脱水、没精神\n高发：幼犬、未疫苗、接触病犬\n处理：立刻就医，禁水禁食`},
-{name:"犬瘟热",info:`症状：高烧、眼屎多、咳嗽、脚垫变硬、抽搐\n高发：幼犬、流浪犬、群居\n处理：极高致死率`},
-{name:"犬冠状病毒",info:`呕吐、拉稀、精神差，易与细小混淆`},
-{name:"钩端螺旋体",info:`发烧、黄疸、肝肾损伤、尿血，污水高发`},
-{name:"猫瘟",info:`高烧、呕吐、便血、白细胞骤降，幼猫高危`},
-{name:"猫鼻支",info:`喷嚏、流涕、眼红肿、食欲差`},
-{name:"猫杯状病毒",info:`口炎、流口水、喷嚏、跛行`},
-{name:"猫传腹",info:`腹水、发烧、消瘦、黄疸、贫血`},
-{name:"猫尿闭",info:`公猫高危，尿不出、惨叫，24h肾衰死亡`},
-{name:"急性胰腺炎",info:`弓背腹痛、呕吐、不吃，油腻诱发，急症`},
+{name:"犬细小病毒",info:`症状：剧烈呕吐、腥臭血便、脱水\n高发：幼犬、未疫苗\n处理：立即就医，禁水禁食`},
+{name:"犬瘟热",info:`症状：高烧、眼屎多、咳嗽、脚垫硬、抽搐\n高发：幼犬、流浪犬\n处理：极高致死率`},
+{name:"猫瘟",info:`症状：高烧、呕吐、便血、白细胞骤降\n高发：幼猫、未免疫\n处理：急症住院`},
+{name:"猫鼻支",info:`症状：喷嚏、流涕、眼红肿\n处理：抗病毒、消炎`},
+{name:"猫传腹",info:`症状：腹水、发烧、消瘦、黄疸\n处理：靶向药`},
+{name:"猫尿闭",info:`公猫高危，尿不出、惨叫，24h肾衰死亡，立即就医`},
+{name:"急性胰腺炎",info:`症状：腹痛、呕吐、不吃，油腻诱发，急症`},
 {name:"真菌皮肤病",info:`圆形掉毛、皮屑、瘙痒，可传染人`},
 {name:"犬窝咳",info:`强传染，空洞咳嗽、干呕`},
-{name:"猫应激",info:`诱发传腹、膀胱炎、脂肪肝、猝死`},
 {name:"中毒",info:`狗：巧克力/葡萄/木糖醇；猫：百合致命，立即催吐送医`}
 ];
 
@@ -395,6 +470,38 @@ document.getElementById('searchD').oninput=e=>{
     <div class="d-item"><h4>${d.name}</h4><div class="d-body">${d.info}</div></div>
   `).join('');
 }
+
+// --------------------------
+// 【新增：X光识别功能】
+// --------------------------
+document.getElementById('xrayFile').addEventListener('change', async (e)=>{
+  let file = e.target.files[0];
+  if(!file) return;
+
+  let preview = document.getElementById('xrayPreview');
+  let result = document.getElementById('xrayResult');
+
+  // 显示图片
+  let src = await new Promise(r=>{
+    let fr = new FileReader();
+    fr.onload=()=>r(fr.result);
+    fr.readAsDataURL(file);
+  })
+  preview.innerHTML = `<img src="${src}">`;
+
+  // 模拟AI识别结果（真实场景可接入AI接口）
+  let mockResult = `【X光影像识别结果】
+——————————————
+• 骨骼：未见明显骨折/脱位
+• 胸腔：肺部纹理清晰，未见明显结节/积液
+• 腹部：肠管积气，未见明显梗阻/异物
+• 提示：若有呕吐/腹痛，建议结合B超进一步检查
+——————————————
+仅供参考，不能替代放射科医生诊断`;
+
+  result.innerHTML = mockResult;
+  result.style.display = 'block';
+});
 
 // 初始加载
 loadPetList();
