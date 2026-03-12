@@ -55,7 +55,6 @@
   .delete-controls button{flex:1;padding:12px;border-radius:10px;border:none;font-size:15px;cursor:pointer;}
   .btn-select-all{background:#ffc4d8;color:#a0003c;}
   .btn-confirm-delete{background:#ff4444;color:#fff;}
-  /* 新增：登录页样式 */
   .login-page{padding:24px;display:block;}
   .login-card{max-width:360px;margin:40px auto;background:#fff;padding:24px;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.1);}
   .login-card h2{text-align:center;color:#a00033;margin-bottom:20px;}
@@ -68,7 +67,6 @@
 </head>
 <body>
 <div class="wrap">
-  <!-- 登录页 -->
   <div class="page show" id="loginPage">
     <div class="login-card">
       <h2>用户登录</h2>
@@ -85,7 +83,6 @@
     </div>
   </div>
 
-  <!-- 主应用页（默认隐藏） -->
   <div class="page" id="mainPage">
     <button class="logout-btn" id="logoutBtn">退出登录</button>
     <div class="head"><h1>猫狗全科诊疗系统</h1></div>
@@ -98,24 +95,25 @@
       <span data-p="6">X光识别</span>
     </div>
 
-    <!-- 1 档案室 -->
     <div class="page show" id="p1">
       <div class="tit">宠物档案室（点击选择宠物诊断）</div>
       <div class="pet-list" id="petList"></div>
       <button class="btn" id="newPet" style="margin-top:10px">新增宠物</button>
     </div>
 
-    <!-- 2 档案编辑 -->
     <div class="page" id="p2">
       <div class="tit">宠物档案编辑</div>
       <input type="hidden" id="editId">
       <div class="item"><label>主人姓名</label><input id="owner"></div>
       <div class="item"><label>宠物名字</label><input id="pname"></div>
-      <div class="item"><label>种类</label><select id="ptype"><option>狗</option><option>猫</option></select></div>
-      <div class="item"><label>品种</label><input id="pbreed"></div>
+      <!-- 1. 修改：种类选择框保留，新增品种联动选择框 -->
+      <div class="item"><label>种类</label><select id="ptype"><option value="">请选择</option><option value="狗">狗</option><option value="猫">猫</option></select></div>
+      <div class="item"><label>品种</label><select id="pbreed"><option value="">请先选择宠物种类</option></select></div>
+      <!-- 原输入框已替换为select -->
       <div class="item"><label>年龄</label><input id="page"></div>
       <div class="item"><label>体重(kg)</label><input id="pweight"></div>
       <div class="item"><label>性别</label><select id="pgender"><option>公</option><option>母</option></select></div>
+      <div class="item"><label>是否绝育</label><select id="psterile"><option>未绝育</option><option>已绝育</option></select></div>
       <div class="item"><label>宠物照片（封面）</label><input type="file" id="avatar" accept="image/*"></div>
 
       <div class="tit">疫苗</div>
@@ -130,11 +128,10 @@
       <button class="btn btn2" id="resetForm">清空表单</button>
     </div>
 
-    <!-- 3 症状诊断 -->
     <div class="page" id="p3">
       <div class="card" id="usePet"></div>
       <div class="tit">主人描述症状</div>
-      <div class="item"><textarea id="sym" placeholder="呕吐、拉稀、咳嗽、不吃饭..."></textarea></div>
+      <div class="item"><textarea id="sym" placeholder="请详细描述症状，例如：呕吐、拉稀、咳嗽、不吃饭、后腿瘫痪、腹水肚大..."></textarea></div>
       <button class="btn" id="startQ">开始问诊</button>
 
       <div class="qbox" id="qbox">
@@ -162,7 +159,6 @@
       <div class="report" id="report"></div>
     </div>
 
-    <!-- 4 诊疗记录 -->
     <div class="page" id="p4">
       <div class="tit">诊疗记录</div>
       <div class="delete-controls" id="deleteControls" style="display:none;">
@@ -172,14 +168,12 @@
       <div id="hisList"></div>
     </div>
 
-    <!-- 5 疾病百科 -->
     <div class="page" id="p5">
       <div class="tit">猫狗全科疾病百科全书</div>
       <input class="search" id="searchD" placeholder="搜索疾病：猫瘟、尿闭、细小、胰腺炎...">
       <div class="d-list" id="dList"></div>
     </div>
 
-    <!-- 6 X光识别 -->
     <div class="page" id="p6">
       <div class="tit">X光影像识别</div>
       <div class="item"><label>上传X光片</label><input type="file" id="xrayFile" accept="image/*"></div>
@@ -192,11 +186,9 @@
 </div>
 
 <script>
-// ==================== 登录与用户隔离逻辑 ====================
 const USERS_KEY = "users";
 let currentUser = null;
 
-// 初始化：检查是否已有登录状态
 function checkLogin() {
   const savedUser = sessionStorage.getItem('currentUser');
   if (savedUser) {
@@ -207,13 +199,11 @@ function checkLogin() {
   }
 }
 
-// 显示登录页
 function showLoginPage() {
   document.getElementById('loginPage').classList.add('show');
   document.getElementById('mainPage').classList.remove('show');
 }
 
-// 显示主应用页
 function showMainPage() {
   document.getElementById('loginPage').classList.remove('show');
   document.getElementById('mainPage').classList.add('show');
@@ -221,7 +211,6 @@ function showMainPage() {
   loadHis();
 }
 
-// 登录逻辑
 document.getElementById('loginBtn').addEventListener('click', function() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -229,19 +218,16 @@ document.getElementById('loginBtn').addEventListener('click', function() {
     alert('请输入用户名和密码');
     return;
   }
-
   const users = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
   if (!users[username] || users[username].password !== password) {
     alert('用户名或密码错误');
     return;
   }
-
   currentUser = { username };
   sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
   showMainPage();
 });
 
-// 注册逻辑
 document.getElementById('registerBtn').addEventListener('click', function() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
@@ -249,27 +235,22 @@ document.getElementById('registerBtn').addEventListener('click', function() {
     alert('请输入用户名和密码');
     return;
   }
-
   const users = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
   if (users[username]) {
     alert('用户名已存在');
     return;
   }
-
   users[username] = { password };
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   alert('注册成功，请登录');
 });
 
-// 退出登录
 document.getElementById('logoutBtn').addEventListener('click', function() {
   sessionStorage.removeItem('currentUser');
   currentUser = null;
   showLoginPage();
 });
 
-// ==================== 原有代码（完全保留，仅修改存储KEY和诊断逻辑） ====================
-// 存储 KEY：根据当前用户隔离数据
 function getStorageKey(baseKey) {
   if (!currentUser) return baseKey;
   return `${baseKey}_${currentUser.username}`;
@@ -277,23 +258,64 @@ function getStorageKey(baseKey) {
 const PETS = "pet_list_v2";
 const HIS = "pet_his_v2";
 
-// 导航
 document.querySelectorAll('.nav span').forEach(n=>{
   n.addEventListener('click', function() {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
     document.querySelectorAll('.nav span').forEach(s => s.classList.remove('on'));
     this.classList.add('on');
     const targetPage = document.getElementById('p' + this.dataset.p);
-    if (targetPage) {
-      targetPage.classList.add('show');
-    }
+    if (targetPage) targetPage.classList.add('show');
     if(this.dataset.p==1) loadPetList();
     if(this.dataset.p==4) loadHis();
     if(this.dataset.p==5) loadDisease();
   });
 })
 
-// 档案室加载
+// 2. 新增：品种联动核心逻辑
+const breedData = {
+  狗: [
+    "泰迪", "贵宾", "比熊", "博美", "吉娃娃", "约克夏", "巴哥", "法斗", "柯基", "雪纳瑞",
+    "西施", "马尔济斯", "京巴", "蝴蝶犬", "柴犬", "边牧", "哈士奇", "萨摩耶", "松狮",
+    "秋田", "英斗", "喜乐蒂", "银狐", "金毛", "拉布拉多", "阿拉斯加", "德牧", "杜宾",
+    "罗威纳", "藏獒", "卡斯罗", "高加索", "马士提夫", "圣伯纳", "大丹", "田园犬"
+  ],
+  猫: [
+    "布偶", "英短", "美短", "蓝猫", "加菲", "金渐层", "银渐层", "矮脚", "缅因", "暹罗",
+    "田园猫", "橘猫", "狸花猫", "三花猫", "金吉拉", "波斯猫", "德文卷毛", "斯芬克斯"
+  ]
+};
+
+// 绑定种类选择事件
+const ptypeSelect = document.getElementById('ptype');
+const pbreedSelect = document.getElementById('pbreed');
+ptypeSelect.addEventListener('change', function() {
+  const selectedType = this.value;
+  pbreedSelect.innerHTML = ''; // 清空原有选项
+
+  if (!selectedType) {
+    // 未选择种类时
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = '请先选择宠物种类';
+    pbreedSelect.appendChild(emptyOption);
+    return;
+  }
+
+  // 添加默认提示选项
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = `请选择${selectedType}品种`;
+  pbreedSelect.appendChild(defaultOption);
+
+  // 加载对应品种列表
+  breedData[selectedType].forEach(breed => {
+    const option = document.createElement('option');
+    option.value = breed;
+    option.textContent = breed;
+    pbreedSelect.appendChild(option);
+  });
+});
+
 function loadPetList(){
   let list = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]");
   let box = document.getElementById('petList');
@@ -303,7 +325,7 @@ function loadPetList(){
       <div class="del" data-id="${p.id}">删除</div>
       ${p.avatar?`<img src="${p.avatar}">`:''}
       <h4>${p.name}（${p.type}）</h4>
-      <p>${p.breed}｜${p.age}｜${p.weight}kg</p>
+      <p>${p.breed}｜${p.age}｜${p.weight}kg｜${p.sterile}</p>
     </div>
   `).join('');
   box.querySelectorAll('.del').forEach(d=>{
@@ -326,34 +348,40 @@ function loadPetList(){
   })
 }
 
-// 新增宠物
 document.getElementById('newPet').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
-  document.getElementById('pbreed').value='';
+  ptypeSelect.value = ''; // 重置种类
+  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>'; // 重置品种
   document.getElementById('page').value='';
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
   document.querySelector('[data-p="2"]').click();
 });
 
-// 清空表单
 document.getElementById('resetForm').addEventListener('click', function() {
   document.getElementById('editId').value='';
   document.getElementById('owner').value='';
   document.getElementById('pname').value='';
-  document.getElementById('pbreed').value='';
+  ptypeSelect.value = ''; // 重置种类
+  pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>'; // 重置品种
   document.getElementById('page').value='';
   document.getElementById('pweight').value='';
   document.getElementById('avatar').value='';
 });
 
-// 保存档案
 document.getElementById('savePet').addEventListener('click', async function() {
   let id = document.getElementById('editId').value || Date.now();
   let name = document.getElementById('pname').value;
+  let type = ptypeSelect.value;
+  let breed = pbreedSelect.value;
+  
+  // 校验必填项
   if(!name){alert("请填写宠物名");return;}
+  if(!type){alert("请选择宠物种类");return;}
+  if(!breed){alert("请选择宠物品种");return;}
+  
   let file = document.getElementById('avatar').files[0];
   let avatar = "";
   if(file){
@@ -365,11 +393,12 @@ document.getElementById('savePet').addEventListener('click', async function() {
   }
   let item = {
     id, owner:document.getElementById('owner').value, name,
-    type:document.getElementById('ptype').value,
-    breed:document.getElementById('pbreed').value,
+    type: type,
+    breed: breed,
     age:document.getElementById('page').value,
     weight:document.getElementById('pweight').value,
     gender:document.getElementById('pgender').value,
+    sterile:document.getElementById('psterile').value,
     vac1:document.getElementById('vac1').value,
     vac2:document.getElementById('vac2').value,
     de1:document.getElementById('de1').value,
@@ -384,19 +413,17 @@ document.getElementById('savePet').addEventListener('click', async function() {
   document.querySelector('[data-p="1"]').click();
 });
 
-// 显示当前宠物
 function showUsePet(){
   let p = sessionStorage.getItem('usePet');
   if(!p){document.getElementById('usePet').innerHTML="<b>请先在档案室选择宠物</b>";return;}
   p = JSON.parse(p);
   document.getElementById('usePet').innerHTML = `
 <b>当前：${p.name}（${p.type}）</b><br>
-品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg<br>
+品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg｜性别：${p.gender}｜绝育：${p.sterile}<br>
 疫苗：${p.vac1}｜狂犬：${p.vac2}｜体内：${p.de1}｜体外：${p.de2}
   `;
 }
 
-// 选项：病程单选/多选
 let sel = {};
 document.querySelectorAll('.opts').forEach(g=>{
   g.querySelectorAll('span').forEach(s=>{
@@ -415,7 +442,6 @@ document.querySelectorAll('.opts').forEach(g=>{
   })
 })
 
-// 开始问诊
 document.getElementById('startQ').addEventListener('click', function() {
   if(!sessionStorage.getItem('usePet')){alert("请先选宠物");return;}
   if(!document.getElementById('sym').value){alert("请输入症状");return;}
@@ -424,342 +450,362 @@ document.getElementById('startQ').addEventListener('click', function() {
   showUsePet();
 });
 
-// ==================== 诊断逻辑（已加入物种隔离+用户隔离） ====================
+function synonymText(text){
+  let t = text.toLowerCase();
+  const map = {
+    "吐":"呕吐","拉肚子":"拉稀","腹泻":"拉稀","没精神":"精神萎靡",
+    "不吃东西":"不吃饭","肚子胀":"腹部胀大","喘不上气":"呼吸急促",
+    "蹲盆频繁":"尿频","不拉":"便秘","流哈喇子":"流口水"
+  };
+  Object.keys(map).forEach(k=>{ t = t.replaceAll(k, map[k]); });
+  return t;
+}
+
 document.getElementById('makeR').addEventListener('click', function() {
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
-  let sym = document.getElementById('sym').value.toLowerCase();
+  let sym = synonymText(document.getElementById('sym').value);
   let day = Array.from(sel.day||[])[0] || "未选择";
-  let add = Array.from(sel.add||[]).join(' ').toLowerCase() || "无补充";
-  
+  let addArr = Array.from(sel.add||[]);
+  let addText = addArr.join(' ');
+  let add = synonymText(addText);
+
   const isDog = pet.type === "狗";
   const isCat = pet.type === "猫";
+  const isMale = pet.gender === "公";
+  const isFemale = pet.gender === "母";
+  const isSterile = pet.sterile === "已绝育";
+  const isUnvaccinated = pet.vac1 === "未接种" || pet.vac1 === "1针" || pet.vac1 === "2针";
 
+  // 年龄
+  let ageNum = parseFloat(pet.age) || 0;
+  let weightNum = parseFloat(pet.weight) || 0;
+  let breed = (pet.breed || "").trim();
+
+  // ================= 品种体型库 =================
+  let dogSize = "small"; // small / middle / large
+  let catStandardWeight = 4.5;
+
+  // 狗品种 → 体型
+  const smallDog = [
+    "泰迪","贵宾","比熊","博美","吉娃娃","约克夏","巴哥","法斗","柯基","雪纳瑞","西施","马尔济斯","京巴","蝴蝶犬"
+  ];
+  const middleDog = [
+    "柴犬","边牧","哈士奇","萨摩耶","松狮","秋田","斗牛","英斗","喜乐蒂","银狐"
+  ];
+  const largeDog = [
+    "金毛","拉布拉多","阿拉斯加","德牧","杜宾","罗威纳","藏獒","卡斯罗","高加索","马士提夫","圣伯纳","大丹"
+  ];
+
+  if (isDog) {
+    if (smallDog.some(s => breed.includes(s))) dogSize = "small";
+    else if (middleDog.some(s => breed.includes(s))) dogSize = "middle";
+    else if (largeDog.some(s => breed.includes(s))) dogSize = "large";
+  }
+
+  // 猫品种 → 标准体重
+  const catWeightMap = {
+    "布偶": 7,
+    "英短": 5.5,
+    "美短": 5.2,
+    "蓝猫": 5.5,
+    "加菲": 6,
+    "金渐层": 5.8,
+    "银渐层": 5.2,
+    "矮脚": 5,
+    "缅因": 9,
+    "暹罗": 4.2,
+    "田园": 4.5,
+    "橘猫":4.8,
+    "狸花猫":4.6,
+    "三花猫":4.3,
+    "金吉拉":5.0,
+    "波斯猫":5.8,
+    "德文卷毛":4.0,
+    "斯芬克斯":4.5
+  };
+  for (let key in catWeightMap) {
+    if (breed.includes(key)) {
+      catStandardWeight = catWeightMap[key];
+      break;
+    }
+  }
+
+  // ================= 判断肥胖、老年 =================
+  let isFat = false;
+  let isOld = ageNum >= 8;
+
+  if (isDog) {
+    if (dogSize === "small") isFat = weightNum > 8;
+    else if (dogSize === "middle") isFat = weightNum > 18;
+    else if (dogSize === "large") isFat = weightNum > 32;
+  }
+  if (isCat) {
+    isFat = weightNum > catStandardWeight * 1.2;
+  }
+
+  // ================= 报告头部 =================
   let r = `【${pet.name}｜${pet.type}｜诊断报告】
 ——————————————
-档案：${pet.breed} ${pet.age} ${pet.weight}kg
+档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜性别：${pet.gender}｜绝育：${pet.sterile}
 疫苗：${pet.vac1} 狂犬：${pet.vac2}
 驱虫：体内${pet.de1} 体外${pet.de2}
 主诉：${sym}
 病程：${day}
-补充：${add}
+补充：${addText || "无补充"}
 ——————————————
 `;
+
+  if (isFat) {
+    r += `⚠️体型提醒：宠物体重超标，易患肥胖、关节病、心脏病、糖尿病、胰腺炎。\n`;
+  }
+  if (isOld) {
+    r += `⚠️年龄提醒：已进入老年期，体质较弱，**非危及生命不建议麻醉与手术**。\n`;
+  }
+  if (isFat || isOld) r += "\n";
+
   let hasDanger = false;
   let hasDiagnosis = false;
 
-  const symptomMap = {
-    "猫瘟|猫泛白细胞减少症": {
-      species: "猫",
-      match: /猫瘟|泛白细胞减少|高烧|呕吐|便血|白细胞降/,
-      info: `【猫瘟（猫泛白细胞减少症）】
-• 症状：高烧、呕吐、便血、白细胞骤降、脱水
-• 治疗：住院输液、抗病毒、止血、止吐、抗生素
-• 预防：疫苗，每年加强`,
-      danger: true
+  const rules = [
+    // 猫专属
+    {
+      name:"猫瘟",
+      cond:()=>isCat && isUnvaccinated && has("高烧","呕吐","便血"),
+      info:"【猫瘟】\n• 症状：高烧、呕吐、便血、白细胞骤降\n• 治疗：住院抗病毒、止血、补液\n• 预防：疫苗",danger:true
     },
-    "猫鼻支|猫疱疹病毒": {
-      species: "猫",
-      match: /鼻支|疱疹病毒|喷嚏|流脓涕|眼红肿|流泪/,
-      info: `【猫鼻支（猫疱疹病毒）】
-• 症状：喷嚏、流脓涕、眼红肿、流泪、发热
-• 治疗：抗病毒药、滴眼液、营养支持
-• 预防：疫苗`,
-      danger: false
+    {
+      name:"猫鼻支",
+      cond:()=>isCat && has("流鼻涕","眼屎多","咳嗽","发烧"),
+      info:"【猫鼻支（猫疱疹病毒）】\n• 症状：喷嚏、流脓涕、眼红肿、流泪\n• 治疗：抗病毒药、滴眼液、营养支持\n• 预防：疫苗",danger:false
     },
-    "猫杯状病毒": {
-      species: "猫",
-      match: /杯状病毒|口炎|流口水|跛行/,
-      info: `【猫杯状病毒】
-• 症状：口炎、流口水、喷嚏、跛行、发热
-• 治疗：止痛、口腔护理、营养支持
-• 预防：疫苗`,
-      danger: false
+    {
+      name:"猫杯状病毒",
+      cond:()=>isCat && has("流口水","口炎","喷嚏","跛行"),
+      info:"【猫杯状病毒】\n• 症状：口炎、流口水、喷嚏、跛行、发热\n• 治疗：止痛、口腔护理、营养支持\n• 预防：疫苗",danger:false
     },
-    "猫传腹|猫传染性腹膜炎|FIP": {
-      species: "猫",
-      match: /传腹|fip|腹水|胸水|肚大|黄疸|发烧消瘦/,
-      info: `【猫传染性腹膜炎（FIP）】
-• 症状：腹大胸水、发烧消瘦、黄疸、贫血
-• 治疗：靶向药、营养支持
-• 预防：减少应激`,
-      danger: true
+    {
+      name:"猫传腹",
+      cond:()=>isCat && has("腹水肚大","发烧","消瘦"),
+      info:"【猫传染性腹膜炎（FIP）】\n• 症状：腹水/胸水、持续发烧、消瘦、黄疸\n• 治疗：靶向药、营养支持\n• 预防：减少应激",danger:true
     },
-    "犬细小|细小病毒": {
-      species: "狗",
-      match: /细小|细小病毒|剧烈呕吐|腥臭血便|脱水/,
-      info: `【犬细小病毒】
-• 症状：剧烈呕吐、腥臭血便、脱水、精神萎靡
-• 治疗：立即就医、禁水禁食、大量补液
-• 预防：疫苗`,
-      danger: true
+    {
+      name:"猫白血病",
+      cond:()=>isCat && has("贫血","消瘦","发烧","免疫力差"),
+      info:"【猫白血病（FeLV）】\n• 症状：贫血、消瘦、发热、免疫力下降\n• 治疗：对症支持、增强免疫\n• 预防：疫苗",danger:true
     },
-    "犬瘟热|犬瘟": {
-      species: "狗",
-      match: /犬瘟|犬瘟热|双相热|脚垫硬|抽搐/,
-      info: `【犬瘟热】
-• 症状：双相热、眼屎多、咳嗽、脚垫硬、抽搐
-• 治疗：单抗、干扰素、补液
-• 预防：疫苗`,
-      danger: true
+    {
+      name:"猫艾滋",
+      cond:()=>isCat && has("反复感染","口炎","消瘦"),
+      info:"【猫免疫缺陷病毒（FIV）】\n• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤",danger:true
     },
-    "犬窝咳": {
-      species: "狗",
-      match: /窝咳|空洞咳嗽|干呕/,
-      info: `【犬窝咳】
-• 症状：空洞样咳嗽、干呕、精神尚可
-• 治疗：止咳、抗炎
-• 预防：疫苗、保暖`,
-      danger: false
+    {
+      name:"猫哮喘",
+      cond:()=>isCat && has("喘","咳嗽","呼吸急促"),
+      info:"【猫哮喘】\n• 症状：喘、咳嗽、呼吸急促、腹式呼吸\n• 治疗：抗炎、雾化、支气管扩张剂\n• 预防：减少粉尘、应激",danger:false
     },
-    "胰腺炎": {
-      species: "狗",
-      match: /胰腺炎|腹痛弓背|油腻|呕吐/,
-      info: `【急性胰腺炎】
-• 症状：呕吐、腹痛弓背、不吃、发热
-• 治疗：禁食、强效补液、止痛、护胰
-• 预防：低脂饮食、不喂油腻食物`,
-      danger: true
+    {
+      name:"猫特发性口炎",
+      cond:()=>isCat && has("流口水","口腔溃烂","拒食"),
+      info:"【猫特发性口炎】\n• 症状：口腔大面积溃烂、剧痛、流口水、拒食\n• 治疗：消炎、止痛、部分拔牙、免疫调节\n• 预防：定期口腔护理",danger:true
     },
-    "胃扭转": {
-      species: "狗",
-      match: /胃扭转|胀肚|干呕|呼吸急促/,
-      info: `【危险：胃扭转】
-• 症状：腹部胀大、干呕、呼吸急促、休克
-• 治疗：几分钟可致死，立即手术
-• 预防：少食多餐，饭后不剧烈运动`,
-      danger: true
+    {
+      name:"猫脂肪肝",
+      cond:()=>isCat && has("不吃饭","黄疸","发烧"),
+      info:"【猫脂肪肝】\n• 症状：突发拒食、黄疸、消瘦\n• 治疗：强制喂食、保肝、营养支持\n• 预防：避免长期绝食",danger:true
     },
-    "耳螨": {
-      species: ["猫", "狗"],
-      match: /耳螨|挠耳|黑褐色分泌物|耳异味/,
-      info: `【耳螨】
-• 症状：黑褐色分泌物、疯狂挠耳、异味
-• 治疗：洗耳液、杀螨药
-• 预防：每月体外驱虫`,
-      danger: false
+    {
+      name:"猫肥厚性心肌病",
+      cond:()=>isCat && has("呼吸急促","运动不耐"),
+      info:"【猫肥厚性心肌病】\n• 症状：呼吸急促、运动不耐、猝死\n• 治疗：心脏药物、控制心率\n• 预防：定期心超",danger:true
     },
-    "跳蚤": {
-      species: ["猫", "狗"],
-      match: /跳蚤|瘙痒|掉毛|小黑点|贫血/,
-      info: `【跳蚤】
-• 症状：瘙痒、掉毛、小黑点、贫血
-• 治疗：体外驱虫、环境消毒
-• 预防：每月体外驱虫`,
-      danger: false
+    {
+      name:"猫动脉血栓",
+      cond:()=>isCat && has("后腿瘫痪","疼痛","爪垫冰冷"),
+      info:"【猫动脉血栓】\n• 症状：后腿突然瘫痪、疼痛、爪垫冰冷\n• 治疗：急症，立即抗凝、止痛\n• 预防：心脏疾病管理",danger:true
     },
-    "体内寄生虫": {
-      species: ["猫", "狗"],
-      match: /蛔虫|钩虫|绦虫|肚大|呕吐虫体|便血|肛门瘙痒/,
-      info: `【体内寄生虫（蛔虫/钩虫/绦虫）】
-• 症状：肚大、呕吐虫体、拉稀、消瘦、肛门瘙痒
-• 治疗：体内驱虫药
-• 预防：定期体内驱虫`,
-      danger: false
+    {
+      name:"公猫尿闭",
+      cond:()=>isCat && isMale && has("尿不出","尿频","腹部胀大"),
+      info:"【公猫尿闭（致命急症）】\n• 症状：尿不出、频繁蹲盆、腹部胀大、惨叫\n• 治疗：24小时致死，必须立即导尿\n• 预防：湿粮、多喝水、减肥",danger:true
     },
-    "球虫滴虫": {
-      species: ["猫", "狗"],
-      match: /球虫|滴虫|软便|黏液便|反复腹泻/,
-      info: `【球虫/滴虫感染】
-• 症状：软便、黏液便、长期腹泻
-• 治疗：抗球虫/滴虫药
-• 预防：环境消毒、避免接触污染水源`,
-      danger: false
+    {
+      name:"百合中毒",
+      cond:()=>isCat && has("呕吐","肾衰"),
+      info:"【百合中毒】\n• 症状：呕吐、肾衰、死亡\n• 治疗：立即催吐、住院透析\n• 预防：猫环境严禁摆放百合",danger:true
     },
-    "尿闭|下泌尿道疾病": {
-      species: ["猫", "狗"],
-      match: /尿闭|尿不出|尿频|尿血|蹲盆频繁|尿痛/,
-      info: function(sym, add, isDog, isCat) {
-          let catTip = isCat ? "【极高危：猫下泌尿道尿闭】\n• 治疗：24h可致高钾血症、肾衰、死亡，必须立刻导尿\n" : "";
-          let dogTip = isDog ? "【犬下泌尿道疾病】\n• 症状：尿频、尿痛、尿血、尿不出\n• 治疗：导尿、输液、消炎、溶石\n" : "";
-          return `${catTip}${dogTip}• 预防：多喝水、湿粮、减少应激`;
-      },
-      danger: true
-    },
-    "膀胱炎结石": {
-      species: ["猫", "狗"],
-      match: /膀胱炎|膀胱结石|尿频|尿血|尿中断/,
-      info: `【膀胱炎/膀胱结石】
-• 症状：尿频、尿急、血尿、尿痛、尿中断
-• 治疗：消炎、止痛、手术/处方粮溶石
-• 预防：多喝水、饮食管理`,
-      danger: false
-    },
-    "慢性肾病|肾衰": {
-      species: ["猫", "狗"],
-      match: function(s, a) {
-          const hasBadBreath = /口臭/.test(s) || /口臭/.test(a);
-          const hasOtherSym = /多饮多尿|消瘦|呕吐|精神萎靡/.test(s) || /多饮多尿|消瘦|呕吐|精神萎靡/.test(a);
-          return hasBadBreath && hasOtherSym;
-      },
-      info: `【慢性肾病/肾衰】
-• 症状：多饮多尿、呕吐、口臭、消瘦、精神差
-• 治疗：处方粮、补液、护肾、降磷
-• 预防：科学喂养、定期体检`,
-      danger: true
-    },
-    "肠胃炎": {
-      species: ["猫", "狗"],
-      match: /肠胃炎|呕吐|拉稀|腹痛|腹泻/,
-      info: `【肠胃炎】
-• 症状：呕吐、拉稀、腹痛、精神差
-• 治疗：禁食、补液、益生菌、止吐止泻
-• 预防：避免乱吃东西`,
-      danger: false
-    },
-    "脂肪肝": {
-      species: ["猫", "狗"],
-      match: /脂肪肝|拒食|黄疸|消瘦/,
-      info: `【脂肪肝】
-• 症状：突然拒食、黄疸、呕吐、消瘦
-• 治疗：强制喂食、保肝、营养支持
-• 预防：避免长期不进食`,
-      danger: true
-    },
-    "肠梗阻异物": {
-      species: ["猫", "狗"],
-      match: /肠梗阻|异物|剧烈呕吐|不排便|腹痛/,
-      info: `【肠梗阻/胃内异物】
-• 症状：剧烈呕吐、腹痛、不排便
-• 治疗：急症，必须手术
-• 预防：避免吞食异物`,
-      danger: true
-    },
-    "牙结石牙周炎": {
-      species: ["猫", "狗"],
-      match: /牙结石|牙周炎|口臭|牙齿黄|牙龈出血|牙齿松动/,
-      info: `【牙结石/牙周炎】
-• 症状：牙齿发黄/褐色结石、口臭、牙龈红肿出血、牙齿松动
-• 治疗：超声波洁牙、牙周护理、消炎、拔牙
-• 预防：每天刷牙、磨牙玩具、洁齿用品`,
-      danger: false
-    },
-    "口炎": {
-      species: ["猫", "狗"],
-      match: /口炎|口腔溃烂|流口水|拒食/,
-      info: `【口炎】
-• 症状：口腔溃烂、剧痛、流口水、拒食
-• 治疗：消炎、止痛、口腔护理
-• 预防：定期口腔检查`,
-      danger: false
-    },
-    "猫癣真菌": {
-      species: ["猫", "狗"],
-      match: /猫癣|真菌|掉毛|皮屑|圆形掉毛/,
-      info: `【猫癣/真菌皮肤病】
-• 症状：圆形掉毛、皮屑、瘙痒、可传染人
-• 治疗：药浴、外用、口服抗真菌药
-• 预防：干燥环境、增强免疫力`,
-      danger: false
-    },
-    "皮炎脓皮症": {
-      species: ["猫", "狗"],
-      match: /皮炎|脓皮症|瘙痒|抓挠|红疹|脓包/,
-      info: `【过敏性皮炎/脓皮症】
-• 症状：瘙痒、抓挠、红肿、掉毛、红疹、脓包
-• 治疗：抗过敏、消炎、皮肤护理/抗生素
-• 预防：远离过敏原、保持皮肤清洁`,
-      danger: false
-    },
-    "关节病": {
-      species: ["猫", "狗"],
-      match: /髌骨脱位|髋关节发育不良|椎间盘突出|跳行|后腿不敢着地|走路摇摆|瘫痪/,
-      info: `【骨骼关节疾病】
-• 症状：跳行、后腿不敢着地、走路摇摆、起身困难、瘫痪
-• 治疗：保守护理或手术矫正
-• 预防：控制体重、避免剧烈运动`,
-      danger: false
-    },
-    "子宫蓄脓乳腺肿瘤": {
-      species: ["猫", "狗"],
-      match: /子宫蓄脓|乳腺肿瘤|未绝育|腹大|流脓|乳腺硬块/,
-      info: `【子宫蓄脓/乳腺肿瘤】
-• 症状：未绝育母宠腹大、流脓、乳腺硬块
-• 治疗：急症，必须手术
-• 预防：尽早绝育`,
-      danger: true
-    },
-    "糖尿病甲状腺": {
-      species: ["猫", "狗"],
-      match: /糖尿病|甲状腺|多饮多尿|多食|消瘦|心跳快/,
-      info: `【糖尿病/甲状腺功能异常】
-• 症状：多饮多尿、多食、消瘦、精神差、心跳快
-• 治疗：胰岛素/药物控制、饮食管理
-• 预防：定期体检、科学喂养`,
-      danger: true
-    },
-    "肥胖症": {
-      species: ["猫", "狗"],
-      match: /肥胖|体重超标|行动不便|易疲劳/,
-      info: `【肥胖症】
-• 症状：体重超标、行动不便、易疲劳
-• 治疗：控制饮食、增加运动、减肥处方粮
-• 预防：定量喂食、不喂零食`,
-      danger: false
-    },
-    "中毒": {
-      species: ["猫", "狗"],
-      match: /中毒|巧克力|葡萄|木糖醇|老鼠药|抽搐|昏迷|尿血/,
-      info: `【中毒】
-• 症状：呕吐、抽搐、昏迷、流口水、尿血
-• 治疗：立即催吐、送医急救
-• 预防：远离巧克力、葡萄、木糖醇、老鼠药等`,
-      danger: true
-    }
-  };
 
-  for (const [diseaseName, config] of Object.entries(symptomMap)) {
-    if (config.species) {
-      const isMatchSpecies = Array.isArray(config.species) 
-        ? config.species.includes(isDog ? "狗" : "猫") 
-        : config.species === (isDog ? "狗" : "猫");
-      if (!isMatchSpecies) continue;
-    }
+    // 狗专属
+    {
+      name:"犬细小",
+      cond:()=>isDog && isUnvaccinated && has("呕吐","便血","腥臭","高烧"),
+      info:"【犬细小病毒】\n• 症状：剧烈呕吐、腥臭血便、脱水、白细胞下降\n• 治疗：立即住院、抗病毒、大量补液\n• 预防：完整疫苗",danger:true
+    },
+    {
+      name:"犬瘟热",
+      cond:()=>isDog && isUnvaccinated && has("高烧","眼屎多","咳嗽","抽搐"),
+      info:"【犬瘟热】\n• 症状：双相热、脓眼屎、咳嗽、后期抽搐\n• 治疗：单抗、补液、营养\n• 预防：疫苗",danger:true
+    },
+    {
+      name:"犬窝咳",
+      cond:()=>isDog && has("空洞咳嗽","干呕"),
+      info:"【犬窝咳】\n• 症状：空洞样咳嗽、干呕、精神尚可\n• 治疗：止咳、抗炎\n• 预防：疫苗、保暖",danger:false
+    },
+    {
+      name:"犬副流感",
+      cond:()=>isDog && has("咳嗽","流涕","发热"),
+      info:"【犬副流感】\n• 症状：咳嗽、流涕、发热、精神差\n• 治疗：对症止咳、抗炎、抗病毒\n• 预防：疫苗",danger:false
+    },
+    {
+      name:"胃扭转",
+      cond:()=>isDog && has("腹部胀大","干呕","呼吸急促"),
+      info:"【胃扭转】\n• 症状：腹部胀大、干呕、呼吸急促、休克\n• 治疗：几分钟致死，立即手术\n• 预防：少食多餐，饭后不剧烈运动",danger:true
+    },
+    {
+      name:"犬心丝虫",
+      cond:()=>isDog && has("咳嗽","气喘","运动不耐"),
+      info:"【犬心丝虫】\n• 症状：咳嗽、气喘、运动不耐、腹水\n• 治疗：无特效药，预防为主\n• 预防：每月驱虫",danger:true
+    },
+    {
+      name:"气管塌陷",
+      cond:()=>isDog && has("鹅叫样咳嗽","运动后喘"),
+      info:"【气管塌陷】\n• 症状：鹅叫样咳嗽、运动后喘\n• 治疗：抗炎、止咳、减重\n• 预防：避免脖链勒颈",danger:false
+    },
+    {
+      name:"莱姆病",
+      cond:()=>isDog && has("发热","关节肿痛","精神差"),
+      info:"【莱姆病】\n• 症状：发热、关节肿痛、精神差\n• 治疗：抗生素\n• 预防：定期驱虫、防蜱虫",danger:false
+    },
+    {
+      name:"钩端螺旋体病",
+      cond:()=>isDog && has("发热","黄疸","血尿"),
+      info:"【钩端螺旋体病】\n• 症状：发热、黄疸、血尿、肝肾损伤\n• 治疗：抗生素、保肝护肾\n• 预防：疫苗、避免接触污染水源",danger:true
+    },
+    {
+      name:"犬疱疹病毒",
+      cond:()=>isDog && has("腹痛","鸣叫","精神差"),
+      info:"【犬疱疹病毒】\n• 症状：幼犬腹痛、鸣叫、死亡，成犬轻微症状\n• 治疗：对症支持\n• 预防：保暖、减少应激",danger:true
+    },
 
-    let isMatch = false;
-    if (typeof config.match === 'function') {
-      isMatch = config.match(sym, add);
-    } else {
-      isMatch = config.match.test(sym) || config.match.test(add);
+    // 共患病
+    {
+      name:"狂犬病",
+      cond:()=>has("狂躁","流口水","攻击","瘫痪"),
+      info:"【狂犬病（可传染人）】\n• 症状：狂躁、流口水、攻击、瘫痪\n• 治疗：100%致死，无药可治\n• 预防：狂犬疫苗",danger:true
+    },
+    {
+      name:"体外寄生虫",
+      cond:()=>has("瘙痒","掉毛","皮肤损伤"),
+      info:"【跳蚤/蜱虫/螨虫】\n• 症状：瘙痒、掉毛、皮肤损伤、贫血\n• 治疗：体外驱虫、环境消毒\n• 预防：每月体外驱虫",danger:false
+    },
+    {
+      name:"体内寄生虫",
+      cond:()=>has("呕吐虫体","拉稀","消瘦","肛门瘙痒"),
+      info:"【体内蠕虫感染】\n• 症状：拉稀、消瘦、呕吐虫体、便血\n• 治疗：体内驱虫药\n• 预防：定期体内驱虫",danger:false
+    },
+    {
+      name:"贾第虫",
+      cond:()=>has("反复软便","黏液便","腹泻"),
+      info:"【贾第虫（可传染人）】\n• 症状：反复软便、黏液便、腹泻\n• 治疗：抗原虫药\n• 预防：干净饮水",danger:false
+    },
+    {
+      name:"猫癣狗癣",
+      cond:()=>has("掉毛","皮肤红疹","瘙痒"),
+      info:"【猫癣狗癣（可传染人）】\n• 症状：圆形掉毛、皮屑、瘙痒\n• 治疗：药浴、抗真菌药\n• 预防：干燥环境",danger:false
+    },
+    {
+      name:"脓皮症湿疹",
+      cond:()=>has("皮肤红疹","脓包","破皮"),
+      info:"【脓皮症/湿疹】\n• 症状：红疹、脓包、破皮、异味\n• 治疗：抗生素、局部护理",danger:false
+    },
+    {
+      name:"胰腺炎",
+      cond:()=>has("腹痛弓背","呕吐") && !has("便血"),
+      info:"【胰腺炎（重症）】\n• 症状：腹痛弓背、呕吐、油腻饮食史\n• 治疗：立即禁食、止痛、护胰\n• 预防：低脂饮食",danger:true
+    },
+    {
+      name:"消化道异物",
+      cond:()=>has("呕吐","便秘","腹部胀大"),
+      info:"【消化道异物/梗阻】\n• 症状：反复呕吐、不排便、腹部疼痛\n• 治疗：拍片、手术/内镜取出\n• 预防：避免啃咬异物",danger:true
+    },
+    {
+      name:"泌尿结石",
+      cond:()=>has("尿频","尿血","尿痛"),
+      info:"【泌尿结石】\n• 症状：尿频、尿血、尿痛\n• 治疗：消炎、溶石、手术\n• 预防：多喝水",danger:false
+    },
+    {
+      name:"膀胱炎",
+      cond:()=>has("尿频") && !has("尿不出","腹大"),
+      info:"【膀胱炎/尿路感染】\n• 症状：尿频、轻微尿血、频繁蹲盆\n• 治疗：消炎、利尿、多喝水\n• 预防：增加饮水",danger:false
+    },
+    {
+      name:"肾衰",
+      cond:()=>has("口臭","多饮多尿","消瘦"),
+      info:"【肾脏功能衰竭】\n• 症状：口臭氨味、多饮多尿、体重下降、呕吐\n• 治疗：护肾、输液、低磷饮食\n• 预防：定期体检",danger:true
+    },
+    {
+      name:"子宫蓄脓",
+      cond:()=>isFemale && !isSterile && has("腹大","流脓","多饮多尿"),
+      info:"【子宫蓄脓（母畜急症）】\n• 症状：腹部胀大、生殖器流脓、多饮多尿\n• 治疗：必须急诊手术\n• 预防：尽早绝育",danger:true
+    },
+    {
+      name:"关节椎间盘问题",
+      cond:()=>has("跛行","疼痛","瘫痪","起身困难"),
+      info:"【关节/椎间盘问题】\n• 症状：跛行、疼痛、瘫痪、起身困难\n• 治疗：止痛、手术、康复\n• 预防：控制体重",danger:true
+    },
+    {
+      name:"中毒",
+      cond:()=>has("呕吐","抽搐","尿血","昏迷"),
+      info:"【中毒】\n• 症状：呕吐、抽搐、尿血、昏迷\n• 治疗：立即催吐送医\n• 预防：远离有毒物品",danger:true
+    },
+    {
+      name:"牙结石牙周炎",
+      cond:()=>has("口臭") && has("牙齿发黄","牙龈出血"),
+      info:"【牙结石/牙周炎】\n• 症状：口臭、牙齿发黄、牙龈出血\n• 治疗：洁牙、消炎、口腔护理\n• 预防：日常刷牙",danger:false
+    },
+    {
+      name:"肠胃炎",
+      cond:()=>has("呕吐","拉稀") && !has("便血","腥臭","高烧"),
+      info:"【肠胃炎】\n• 症状：呕吐、拉稀、精神一般\n• 治疗：禁食、益生菌、护胃\n• 预防：规律饮食",danger:false
     }
+  ];
 
-    if (isMatch) {
-      if (typeof config.info === 'function') {
-        r += config.info(sym, add, isDog, isCat) + "\n\n";
-      } else {
-        r += config.info + "\n\n";
-      }
+  function has(...words){
+    return words.every(w=> (sym.includes(w) || add.includes(w)));
+  }
+
+  for(let rule of rules){
+    if(rule.cond()){
+      r += rule.info + "\n\n";
       hasDiagnosis = true;
-      if (config.danger) hasDanger = true;
+      if(rule.danger) hasDanger = true;
     }
   }
 
   if(!hasDiagnosis){
-    r += `【未识别到明确疾病】
-• 症状较轻：多为消化不良/挑食/应激，观察24h，益生菌调理
-• 若症状加重（发烧、呕吐、便血等），请立即就医\n`;
+    r += `【未匹配高风险疾病】
+• 大概率为轻度应激/消化不良
+• 建议：益生菌调理，观察24小时
+• 若出现加重（高烧、拒食、呼吸困难）请立即就医\n`;
   }
 
   if(hasDanger){
-    r += `\n⚠️ 【结论：症状危重，需立即就医！】\n`;
-    r += `• 多系统症状提示：严重感染/肝肾疾病/结石/传腹\n`;
-    r += `• 必须做：血常规、生化、B超、尿检，不能拖延！\n`;
+    r += `⚠️ 【危重提示：满足多项重症指征，请立即就医】\n`;
   } else if(hasDiagnosis){
-    r += `\n【结论：症状明确，建议针对性治疗/护理】\n`;
+    r += `【提示：症状匹配明确，建议对症治疗】\n`;
   } else {
-    r += `\n【结论：症状较轻，可居家观察】\n`;
+    r += `【提示：症状轻微，建议居家观察护理】\n`;
   }
-  r += `\n——————————————\n仅供参考，不能替代兽医面诊`;
-  
+  r += `\n——————————————\n本报告为智能参考，不能替代执业兽医面诊`;
+
   document.getElementById('report').innerHTML = r;
   document.getElementById('report').style.display = 'block';
-  
+
   let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
   hs.unshift({id:Date.now(),name:pet.name,type:pet.type,t:new Date().toLocaleString(),text:r});
   if(hs.length>60) hs.pop();
   localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
 });
 
-// 加载诊疗记录
 function loadHis(){
   let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
   let box = document.getElementById('hisList');
@@ -770,7 +816,6 @@ function loadHis(){
     deleteControls.style.display = 'none';
     return;
   }
-  
   deleteControls.style.display = 'flex';
   
   box.innerHTML = hs.map(h=>`
@@ -808,210 +853,111 @@ function loadHis(){
 document.getElementById('selectAllBtn').addEventListener('click', function() {
   let checkboxes = document.querySelectorAll('.his-checkbox');
   let isAllSelected = Array.from(checkboxes).every(cb => cb.checked);
-  
-  checkboxes.forEach(cb => {
-    cb.checked = !isAllSelected;
-  });
+  checkboxes.forEach(cb => cb.checked = !isAllSelected);
 });
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
   let selectedCheckboxes = document.querySelectorAll('.his-checkbox:checked');
-  
   if(selectedCheckboxes.length === 0){
     alert('请先选择要删除的诊疗记录！');
     return;
   }
-  
-  if(!confirm(`确定要删除选中的 ${selectedCheckboxes.length} 条诊疗记录吗？此操作不可恢复！`)) return;
-  
+  if(!confirm(`确定删除 ${selectedCheckboxes.length} 条记录？`)) return;
   let selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
   let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
   hs = hs.filter(h => !selectedIds.includes(h.id.toString()));
   localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
-  
   loadHis();
-  alert(`成功删除 ${selectedCheckboxes.length} 条诊疗记录！`);
 });
 
 const diseases = [
-  {name:"猫瘟（猫泛白细胞减少症）",type:"",info:`【症状】高烧、呕吐、便血、白细胞骤降、脱水
-【治疗】住院输液、抗病毒、止血、止吐、抗生素
-【预防】疫苗，每年加强`},
-  {name:"猫鼻支（猫疱疹病毒）",type:"",info:`【症状】喷嚏、流脓涕、眼红肿、流泪、发热
-【治疗】抗病毒药、滴眼液、营养支持
-【预防】疫苗`},
-  {name:"猫杯状病毒",type:"",info:`【症状】口炎、流口水、喷嚏、跛行、发热
-【治疗】止痛、口腔护理、营养支持
-【预防】疫苗`},
-  {name:"猫冠状病毒",type:"",info:`【症状】呕吐、腹泻；传腹型：腹水/胸水、发烧
-【治疗】对症治疗、靶向药
-【预防】减少应激`},
-  {name:"猫传染性腹膜炎 FIP",type:"",info:`【症状】腹大胸水、发烧消瘦、黄疸、贫血
-【治疗】靶向药、营养支持
-【预防】减少应激`},
-  {name:"犬细小病毒",type:"",info:`【症状】剧烈呕吐、腥臭血便、脱水、精神萎靡
-【治疗】立即就医、禁水禁食、大量补液
-【预防】疫苗`},
-  {name:"犬瘟热",type:"",info:`【症状】双相热、眼屎多、咳嗽、脚垫硬、抽搐
-【治疗】单抗、干扰素、补液
-【预防】疫苗`},
-  {name:"犬冠状病毒",type:"",info:`【症状】呕吐、拉稀、精神差
-【治疗】对症补液、消炎`},
-  {name:"犬窝咳",type:"",info:`【症状】空洞样咳嗽、干呕、精神尚可
-【治疗】止咳、抗炎
-【预防】疫苗、保暖`},
-  {name:"耳螨",type:"",info:`【症状】黑褐色分泌物、疯狂挠耳、异味
-【治疗】洗耳液、杀螨药
-【预防】每月体外驱虫`},
-  {name:"跳蚤",type:"",info:`【症状】瘙痒、掉毛、小黑点、贫血
-【治疗】体外驱虫、环境消毒
-【预防】每月体外驱虫`},
-  {name:"蛔虫",type:"",info:`【症状】肚大、呕吐虫体、拉稀、消瘦
-【治疗】体内驱虫药`},
-  {name:"钩虫",type:"",info:`【症状】软便、便血、贫血、消瘦
-【治疗】体内驱虫药`},
-  {name:"绦虫",type:"",info:`【症状】肛门瘙痒、粪便可见白色节片
-【治疗】体内驱虫药`},
-  {name:"球虫",type:"",info:`【症状】软便、便血、反复腹泻
-【治疗】抗球虫药`},
-  {name:"滴虫",type:"",info:`【症状】软便、黏液便、长期腹泻
-【治疗】抗滴虫药`},
-  {name:"弓形虫",type:"",info:`【症状】发热、淋巴结肿大、流产、神经症状
-【治疗】抗弓形虫药
-【预防】不吃生肉`},
-  {name:"心丝虫",type:"",info:`【症状】咳嗽、气喘、运动不耐、猝死
-【治疗】无特效药，预防为主`},
-  {name:"下泌尿道疾病",type:"",info:`【症状】尿频、尿痛、尿血、尿不出、蹲盆频繁
-【治疗】导尿、输液、消炎、溶石
-【预防】多喝水、湿粮、减少应激`},
-  {name:"尿闭",type:"",info:`【症状】频繁蹲砂盆、无尿、惨叫、呕吐、腹胀
-【治疗】急症，24小时可致肾衰死亡，必须立即导尿
-【预防】多喝水、湿粮、减肥、减压`},
-  {name:"膀胱炎",type:"",info:`【症状】尿频、尿急、血尿、尿痛
-【治疗】消炎、止痛、止血、补水`},
-  {name:"膀胱结石",type:"",info:`【症状】尿频、尿血、尿中断、尿不出
-【治疗】手术/处方粮溶石
-【预防】多喝水、饮食管理`},
-  {name:"慢性肾病",type:"",info:`【症状】多饮多尿、呕吐、口臭、消瘦、精神差
-【治疗】处方粮、补液、护肾、降磷
-【预防】科学喂养、定期体检`},
-  {name:"肠胃炎",type:"",info:`【症状】呕吐、拉稀、腹痛、精神差
-【治疗】禁食、补液、益生菌、止吐止泻`},
-  {name:"胰腺炎",type:"",info:`【症状】呕吐、腹痛弓背、不吃、发热
-【治疗】禁食、强效补液、止痛、护胰
-【预防】低脂饮食、不喂油腻食物`},
-  {name:"脂肪肝",type:"",info:`【症状】突然拒食、黄疸、呕吐、消瘦
-【治疗】强制喂食、保肝、营养支持
-【预防】避免长期不进食`},
-  {name:"便秘/巨结肠",type:"",info:`【症状】排便困难、干硬便、频繁蹲坑
-【治疗】通便、灌肠、饮食调理、手术`},
-  {name:"胃内异物",type:"",info:`【症状】反复呕吐、腹痛、拒食
-【治疗】胃镜或手术取出`},
-  {name:"肠梗阻",type:"",info:`【症状】剧烈呕吐、腹痛、不排便
-【治疗】急症，必须手术`},
-  {name:"胃扭转",type:"",info:`【症状】腹部胀大、干呕、呼吸急促、休克
-【治疗】几分钟可致死，立即手术
-【预防】少食多餐，饭后不剧烈运动`},
-  {name:"肺炎",type:"",info:`【症状】高烧、咳喘、腹式呼吸、精神差
-【治疗】抗生素、吸氧、住院护理`},
-  {name:"哮喘/支气管炎",type:"",info:`【症状】喘、咳嗽、呼吸急促
-【治疗】抗炎、支气管扩张剂`},
-  {name:"髌骨脱位",type:"",info:`【症状】跳行、后腿不敢着地、走路异常
-【治疗】保守护理或手术矫正`},
-  {name:"髋关节发育不良",type:"",info:`【症状】走路摇摆、起身困难、不愿运动
-【治疗】保守或手术治疗`},
-  {name:"椎间盘突出",type:"",info:`【症状】弓背、疼痛、无力、瘫痪
-【治疗】止痛、消炎、手术`},
-  {name:"猫癣/真菌皮肤病",type:"",info:`【症状】圆形掉毛、皮屑、瘙痒、可传染人
-【治疗】药浴、外用、口服抗真菌药
-【预防】干燥环境、增强免疫力`},
-  {name:"过敏性皮炎",type:"",info:`【症状】瘙痒、抓挠、红肿、掉毛、皮屑
-【治疗】抗过敏、消炎、皮肤护理`},
-  {name:"脓皮症",type:"",info:`【症状】红疹、脓包、破皮、异味
-【治疗】抗生素、局部清洁护理`},
-  {name:"牙结石",type:"",info:`【症状】牙齿发黄、褐色结石、口臭明显
-【治疗】超声波洁牙、抛光
-【预防】每天刷牙、磨牙玩具、洁齿用品`},
-  {name:"牙周炎",type:"",info:`【症状】口臭、牙龈红肿出血、疼痛、咀嚼困难、牙齿松动脱落
-【治疗】洁牙、牙周护理、消炎、拔牙
-【预防】每天刷牙、定期口腔检查`},
-  {name:"口炎",type:"",info:`【症状】口腔溃烂、剧痛、流口水、拒食
-【治疗】消炎、止痛、口腔护理`},
-  {name:"子宫蓄脓",type:"",info:`【症状】未绝育母宠：腹大、流脓、多饮多尿、发烧
-【治疗】急症，必须手术摘除子宫卵巢
-【预防】尽早绝育`},
-  {name:"糖尿病",type:"",info:`【症状】多饮多尿、多食、消瘦、精神差
-【治疗】胰岛素、饮食控制`},
-  {name:"甲状腺功能异常",type:"",info:`【症状】消瘦、多食、心跳快、精神亢奋/萎靡
-【治疗】药物或手术控制`},
-  {name:"乳腺肿瘤",type:"",info:`【症状】乳腺硬块、肿胀、破溃
-【治疗】手术切除
-【预防】早期绝育`},
-  {name:"肥胖症",type:"",info:`【症状】体重超标、行动不便、易疲劳
-【治疗】控制饮食、增加运动、减肥处方粮
-【预防】定量喂食、不喂零食`},
-  {name:"中毒",type:"",info:`【症状】呕吐、抽搐、昏迷、流口水、尿血
-【治疗】立即催吐、送医急救
-【预防】远离巧克力、葡萄、木糖醇、老鼠药等`},
-  {name:"狂犬病",type:"",info:`【症状】狂躁、流口水、攻击、瘫痪
-【治疗】无药可治，100%死亡
-【预防】狂犬疫苗`}
+  {name:"一、猫专属疾病",type:"分类",info:"仅猫会发病，狗不感染"},
+  {name:"猫瘟（猫泛白细胞减少症）",type:"猫专属",info:"• 症状：高烧、呕吐、便血、白细胞骤降、脱水\n• 治疗：住院输液、抗病毒、止血、止吐、抗生素\n• 预防：疫苗，每年加强"},
+  {name:"猫鼻支（猫疱疹病毒）",type:"猫专属",info:"• 症状：喷嚏、流脓涕、眼红肿、流泪、发热\n• 治疗：抗病毒药、滴眼液、营养支持\n• 预防：疫苗"},
+  {name:"猫杯状病毒",type:"猫专属",info:"• 症状：口炎、流口水、喷嚏、跛行、发热\n• 治疗：止痛、口腔护理、营养支持\n• 预防：疫苗"},
+  {name:"猫传染性腹膜炎（FIP）",type:"猫专属",info:"• 症状：腹大胸水、发烧消瘦、黄疸、贫血\n• 治疗：靶向药、营养支持\n• 预防：减少应激"},
+  {name:"猫白血病（FeLV）",type:"猫专属",info:"• 症状：贫血、消瘦、发热、免疫力下降\n• 治疗：对症支持、增强免疫\n• 预防：疫苗、避免接触病猫"},
+  {name:"猫免疫缺陷病毒（FIV/猫艾滋）",type:"猫专属",info:"• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤"},
+  {name:"猫哮喘",type:"猫专属",info:"• 症状：喘、咳嗽、呼吸急促、腹式呼吸\n• 治疗：抗炎、雾化、支气管扩张剂\n• 预防：减少粉尘、应激"},
+  {name:"猫特发性口炎",type:"猫专属",info:"• 症状：口腔大面积溃烂、剧痛、流口水、拒食\n• 治疗：消炎、止痛、部分拔牙、免疫调节\n• 预防：定期口腔护理"},
+  {name:"猫脂肪肝",type:"猫专属",info:"• 症状：突发不进食、黄疸、呕吐、消瘦\n• 治疗：强制喂食、保肝、营养支持\n• 预防：避免长期不进食"},
+  {name:"猫肥厚性心肌病",type:"猫专属",info:"• 症状：呼吸急促、运动不耐、猝死\n• 治疗：心脏药物、控制心率\n• 预防：定期心超"},
+  {name:"猫动脉血栓",type:"猫专属",info:"• 症状：后腿突然瘫痪、疼痛、爪垫冰冷\n• 治疗：急症，立即抗凝、止痛\n• 预防：心脏疾病管理"},
+  {name:"公猫尿闭",type:"猫专属",info:"• 症状：频繁蹲盆、无尿、惨叫、呕吐、腹胀\n• 治疗：24h致死，必须立刻导尿\n• 预防：多喝水、湿粮、减肥、减压"},
+  {name:"百合中毒",type:"猫专属",info:"• 症状：呕吐、肾衰、死亡\n• 治疗：立即催吐、住院透析\n• 预防：猫环境严禁摆放百合"},
+
+  {name:"二、狗专属疾病",type:"分类",info:"仅狗会发病，猫不感染"},
+  {name:"犬细小病毒",type:"狗专属",info:"• 症状：剧烈呕吐、腥臭血便、脱水、精神萎靡\n• 治疗：立即就医、禁水禁食、大量补液\n• 预防：疫苗"},
+  {name:"犬瘟热",type:"狗专属",info:"• 症状：双相热、眼屎多、咳嗽、脚垫硬、抽搐\n• 治疗：单抗、干扰素、补液\n• 预防：疫苗"},
+  {name:"犬窝咳",type:"狗专属",info:"• 症状：空洞样咳嗽、干呕、精神尚可\n• 治疗：止咳、抗炎\n• 预防：疫苗、保暖"},
+  {name:"犬副流感",type:"狗专属",info:"• 症状：咳嗽、流涕、发热、精神差\n• 治疗：对症止咳、抗炎、抗病毒\n• 预防：疫苗"},
+  {name:"胃扭转",type:"狗专属",info:"• 症状：腹部胀大、干呕、呼吸急促、休克\n• 治疗：几分钟致死，立即手术\n• 预防：少食多餐，饭后不剧烈运动"},
+  {name:"犬心丝虫",type:"狗专属",info:"• 症状：咳嗽、气喘、运动不耐、腹水\n• 治疗：无特效药，预防为主\n• 预防：每月驱虫"},
+  {name:"气管塌陷",type:"狗专属",info:"• 症状：鹅叫样咳嗽、运动后喘\n• 治疗：抗炎、止咳、减重\n• 预防：避免脖链勒颈"},
+  {name:"莱姆病",type:"狗专属",info:"• 症状：发热、关节肿痛、精神差\n• 治疗：抗生素\n• 预防：定期驱虫、防蜱虫"},
+  {name:"钩端螺旋体病",type:"狗专属",info:"• 症状：发热、黄疸、血尿、肝肾损伤\n• 治疗：抗生素、保肝护肾\n• 预防：疫苗、避免接触污染水源"},
+  {name:"犬疱疹病毒",type:"狗专属",info:"• 症状：幼犬腹痛、鸣叫、死亡，成犬轻微症状\n• 治疗：对症支持\n• 预防：保暖、减少应激"},
+
+  {name:"三、猫狗共患疾病",type:"分类",info:"猫犬均会得，部分可传染人"},
+  {name:"狂犬病（可传染人）",type:"共患-病毒性",info:"• 症状：狂躁、流口水、攻击、瘫痪\n• 治疗：100%致死，无药可治\n• 预防：狂犬疫苗"},
+  {name:"跳蚤/蜱虫/螨虫",type:"共患-寄生虫",info:"• 症状：瘙痒、掉毛、皮肤损伤、贫血\n• 治疗：体外驱虫、环境消毒\n• 预防：每月体外驱虫"},
+  {name:"体内蠕虫感染",type:"共患-寄生虫",info:"• 症状：拉稀、消瘦、呕吐虫体、便血\n• 治疗：体内驱虫药\n• 预防：定期体内驱虫"},
+  {name:"贾第虫（可传染人）",type:"共患-寄生虫",info:"• 症状：反复软便、黏液便、腹泻\n• 治疗：抗原虫药\n• 预防：干净饮水"},
+  {name:"猫癣狗癣（可传染人）",type:"共患-皮肤",info:"• 症状：圆形掉毛、皮屑、瘙痒\n• 治疗：药浴、抗真菌药\n• 预防：干燥环境"},
+  {name:"脓皮症/湿疹",type:"共患-皮肤",info:"• 症状：红疹、脓包、破皮、异味\n• 治疗：抗生素、局部护理"},
+  {name:"胰腺炎",type:"共患-消化",info:"• 症状：呕吐、腹痛、拒食、油腻史\n• 治疗：禁食、止痛、护胰\n• 预防：低脂饮食"},
+  {name:"消化道异物梗阻",type:"共患-消化",info:"• 症状：呕吐、便秘、腹胀、腹痛\n• 治疗：拍片、手术/内镜取出\n• 预防：避免啃咬异物"},
+  {name:"泌尿结石",type:"共患-泌尿",info:"• 症状：尿频、尿血、尿痛\n• 治疗：消炎、溶石、手术\n• 预防：多喝水"},
+  {name:"膀胱炎/尿路感染",type:"共患-泌尿",info:"• 症状：尿频、轻微尿血、频繁蹲盆\n• 治疗：消炎、利尿、多喝水\n• 预防：增加饮水"},
+  {name:"肾脏功能衰竭",type:"共患-泌尿",info:"• 症状：口臭氨味、多饮多尿、体重下降、呕吐\n• 治疗：护肾、输液、低磷饮食\n• 预防：定期体检"},
+  {name:"子宫蓄脓（母畜）",type:"共患-生殖",info:"• 症状：腹部胀大、生殖器流脓、多饮多尿\n• 治疗：必须急诊手术\n• 预防：尽早绝育"},
+  {name:"关节/椎间盘问题",type:"共患-骨骼",info:"• 症状：跛行、疼痛、瘫痪、起身困难\n• 治疗：止痛、手术、康复\n• 预防：控制体重"},
+  {name:"中毒",type:"共患-急症",info:"• 症状：呕吐、抽搐、尿血、昏迷\n• 治疗：立即催吐送医\n• 预防：远离有毒物品"},
+  {name:"牙结石/牙周炎",type:"共患-口腔",info:"• 症状：口臭、牙齿发黄、牙龈出血\n• 治疗：洁牙、消炎、口腔护理\n• 预防：日常刷牙"},
+  {name:"肠胃炎",type:"共患-消化",info:"• 症状：呕吐、拉稀、精神一般\n• 治疗：禁食、益生菌、护胃\n• 预防：规律饮食"}
 ];
 
 function loadDisease(){
-  let box = document.getElementById('dList');
-  box.innerHTML = diseases.map((d,i)=>`
+  let html = diseases.map(d=>`
     <div class="d-item">
       <h4>${d.name}</h4>
-      <div class="d-body">
-${d.info}
-      </div>
-    </div>
-  `).join('');
-  box.querySelectorAll('.d-item').forEach(it=>{
-    it.addEventListener('click', function() {
-      let b = this.querySelector('.d-body');
-      b.style.display = b.style.display=="none"?"block":"none";
-    });
-  })
-}
-
-document.getElementById('searchD').addEventListener('input', function(e) {
-  let kw = e.target.value.toLowerCase();
-  let arr = diseases.filter(d=>d.name.toLowerCase().includes(kw) || d.info.toLowerCase().includes(kw));
-  let box = document.getElementById('dList');
-  box.innerHTML = arr.map((d,i)=>`
-    <div class="d-item">
-      <h4>${d.name}｜${d.type}</h4>
       <div class="d-body">${d.info}</div>
     </div>
   `).join('');
-  box.querySelectorAll('.d-item').forEach(it=>{
-    it.addEventListener('click', function() {
-      let b = this.querySelector('.d-body');
-      b.style.display = b.style.display=="none"?"block":"none";
+  document.getElementById('dList').innerHTML = html;
+  
+  document.querySelectorAll('.d-item').forEach(i=>{
+    i.addEventListener('click', function() {
+      let body = this.querySelector('.d-body');
+      body.style.display = body.style.display=="none"?"block":"none";
     });
   });
-});
+  
+  document.getElementById('searchD').addEventListener('input', function() {
+    let kw = this.value.toLowerCase().trim();
+    let list = document.querySelectorAll('.d-item');
+    list.forEach(i=>{
+      let name = i.querySelector('h4').innerText.toLowerCase();
+      let info = i.querySelector('.d-body').innerText.toLowerCase();
+      i.style.display = (name.includes(kw) || info.includes(kw)) ? 'block' : 'none';
+    });
+  });
+}
 
-document.getElementById('xrayFile').addEventListener('change', async function(e) {
+// 初始化
+checkLogin();
+
+// X光识别临时逻辑（占位）
+document.getElementById('xrayFile').addEventListener('change', function(e) {
   let file = e.target.files[0];
   if(!file) return;
-  let src = await new Promise(r=>{
-    let fr = new FileReader();
-    fr.onload=()=>r(fr.result);
-    fr.readAsDataURL(file);
-  })
-  document.getElementById('xrayPreview').innerHTML = `<img src="${src}">`;
-  document.getElementById('xrayResult').innerHTML = `【X光识别结果】
-• 骨骼：未见明显骨折
-• 胸腔：肺部纹理清晰
-• 腹部：肠管积气，未见梗阻
-仅供参考`;
+  let reader = new FileReader();
+  reader.onload = function() {
+    document.getElementById('xrayPreview').innerHTML = `<img src="${reader.result}">`;
+    document.getElementById('xrayResult').innerText = "X光识别结果（模拟）：未发现明显骨折/异物，建议结合临床症状综合判断。";
+  };
+  reader.readAsDataURL(file);
 });
-
-// 初始化：先检查登录状态
-checkLogin();
 </script>
 </body>
 </html>
