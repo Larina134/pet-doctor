@@ -42,7 +42,7 @@
         .tab-bar {
             display: flex;
             border-bottom: 1px solid #ffebee;
-            background: #f8fff8;
+            background: #fff8fa;
         }
         .tab {
             flex: 1;
@@ -257,6 +257,27 @@
                 <label>年（日）龄（选填，可简写）</label>
                 <input type="text" id="petAge" placeholder="如：2岁3月21天 或 2岁">
             </div>
+            <!-- 新增疫苗模块 -->
+            <div class="form-row">
+                <label>是否已接种疫苗（选填）</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="isVaccinated" onchange="toggleVaccineInput()"> 已接种</label>
+                </div>
+            </div>
+            <div class="form-row" id="vaccineDosesRow" style="display:none;">
+                <label>已接种针数（选填）</label>
+                <select id="vaccineDoses">
+                    <option value="">请选择</option>
+                    <option value="1针">1针</option>
+                    <option value="2针">2针</option>
+                    <option value="3针">3针</option>
+                    <option value="4针及以上">4针及以上</option>
+                </select>
+            </div>
+            <div class="form-row" id="vaccineTypeRow" style="display:none;">
+                <label>疫苗品牌/种类（选填）</label>
+                <input type="text" id="vaccineType" placeholder="如：卫佳捌/妙三多">
+            </div>
             <div class="section-title">日粮及免疫情况（选填）</div>
             <div class="form-row">
                 <label>日粮品牌及饲喂方式</label>
@@ -346,9 +367,15 @@
             document.querySelector(`.tab-bar .tab:nth-child(${tab === 'profile' ? 1 : tab === 'diagnosis' ? 2 : 3})`).classList.add("active");
             if (tab === 'diagnosis' && currentPet) {
                 document.getElementById("petInfoCard").style.display = "block";
+                let vaccineInfo = "";
+                if (currentPet.isVaccinated) {
+                    vaccineInfo = ` | 已接种疫苗：${currentPet.vaccineDoses || '未填针数'} ${currentPet.vaccineType || ''}`;
+                } else {
+                    vaccineInfo = " | 未接种疫苗";
+                }
                 document.getElementById("petInfoText").innerHTML = `
                     ${currentPet.petName} | ${currentPet.petBreed} | ${currentPet.petWeight || '未填写'}kg | ${currentPet.petGender} | ${currentPet.petAge || '未填写'}<br>
-                    主人：${currentPet.ownerName || '未填写'} | 饲喂：${currentPet.feedFrequency}
+                    主人：${currentPet.ownerName || '未填写'} | 饲喂：${currentPet.feedFrequency}${vaccineInfo}
                 `;
             }
             if (tab === 'history') renderHistory();
@@ -363,6 +390,16 @@
             const display = checkbox.checked ? "block" : "none";
             row.style.display = display;
             freqRow.style.display = display;
+        }
+
+        // 切换疫苗输入框显示
+        function toggleVaccineInput() {
+            const checkbox = document.getElementById("isVaccinated");
+            const dosesRow = document.getElementById("vaccineDosesRow");
+            const typeRow = document.getElementById("vaccineTypeRow");
+            const display = checkbox.checked ? "block" : "none";
+            dosesRow.style.display = display;
+            typeRow.style.display = display;
         }
 
         // 预览宠物照片
@@ -396,6 +433,9 @@
                 petAge: document.getElementById("petAge").value,
                 feedFrequency: document.getElementById("feedFrequency").value,
                 foodChange: document.getElementById("foodChange").value,
+                isVaccinated: document.getElementById("isVaccinated").checked,
+                vaccineDoses: document.getElementById("vaccineDoses").value,
+                vaccineType: document.getElementById("vaccineType").value,
                 dewormInternal: document.getElementById("dewormInternal").checked,
                 dewormInternalDrug: document.getElementById("dewormInternalDrug").value,
                 dewormInternalFreq: document.getElementById("dewormInternalFreq").value,
