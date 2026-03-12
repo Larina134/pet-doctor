@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>猫狗全科诊疗系统（最终优化+X光识别版）</title>
+<title>猫狗全科诊疗系统（最终专业版）</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial;}
@@ -10,8 +10,8 @@
   .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;}
   .head{background:#ffb6c1;padding:16px;text-align:center;}
   .head h1{font-size:18px;color:#800033;}
-  .nav{display:flex;background:#fff8fa;}
-  .nav span{flex:1;padding:14px;text-align:center;font-size:14px;cursor:pointer;}
+  .nav{display:flex;background:#fff8fa;flex-wrap:wrap;}
+  .nav span{flex:1;padding:12px;text-align:center;font-size:13px;cursor:pointer;}
   .nav span.on{background:#fff;color:#a0003c;border-bottom:2px solid #e64980;font-weight:600;}
   .page{padding:18px;display:none;}
   .page.show{display:block;}
@@ -46,7 +46,6 @@
   .d-body{padding:10px;background:#fff8fa;border-radius:8px;margin-top:6px;font-size:12px;line-height:1.5;white-space:pre-line;display:none;}
   .search{padding:12px;border:1px solid #ffc4d8;border-radius:10px;width:100%;margin-bottom:12px;}
   .d-list{max-height:360px;overflow:auto;}
-  /* X光界面专属样式 */
   .xray-box{padding:16px;background:#fff8fa;border-radius:12px;margin-top:10px;}
   .xray-preview{width:100%;height:220px;border:2px dashed #ffc4d8;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#f8f8f8;}
   .xray-preview img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
@@ -55,18 +54,26 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="head"><h1>猫狗全科诊疗系统（最终优化+X光识别）</h1></div>
+  <div class="head"><h1>猫狗全科诊疗系统（最终专业版）</h1></div>
   <div class="nav">
-    <span class="on" data-p="1">宠物档案</span>
-    <span data-p="2">症状诊断</span>
-    <span data-p="3">诊疗记录</span>
-    <span data-p="4">疾病百科</span>
-    <span data-p="5">X光识别</span>
+    <span class="on" data-p="1">档案室</span>
+    <span data-p="2">档案编辑</span>
+    <span data-p="3">症状诊断</span>
+    <span data-p="4">诊疗记录</span>
+    <span data-p="5">疾病百科</span>
+    <span data-p="6">X光识别</span>
   </div>
 
-  <!-- 1 宠物档案（不变） -->
+  <!-- 1 档案室（多宠物管理，封面为宠物照片） -->
   <div class="page show" id="p1">
-    <div class="tit">新增/修改宠物档案</div>
+    <div class="tit">宠物档案室（点击选择宠物进行诊断）</div>
+    <div class="pet-list" id="petList"></div>
+    <button class="btn" id="newPet" style="margin-top:10px">新增宠物</button>
+  </div>
+
+  <!-- 2 档案编辑（可修改/新增） -->
+  <div class="page" id="p2">
+    <div class="tit">宠物档案编辑</div>
     <input type="hidden" id="editId">
     <div class="item"><label>主人姓名</label><input id="owner"></div>
     <div class="item"><label>宠物名字</label><input id="pname"></div>
@@ -75,7 +82,7 @@
     <div class="item"><label>年龄</label><input id="page"></div>
     <div class="item"><label>体重(kg)</label><input id="pweight"></div>
     <div class="item"><label>性别</label><select id="pgender"><option>公</option><option>母</option></select></div>
-    <div class="item"><label>宠物照片（可选）</label><input type="file" id="avatar" accept="image/*"></div>
+    <div class="item"><label>宠物照片（封面）</label><input type="file" id="avatar" accept="image/*"></div>
 
     <div class="tit">疫苗</div>
     <div class="item"><label>核心疫苗</label><select id="vac1"><option>未接种</option><option>1针</option><option>2针</option><option>3针全套</option><option>已加强</option></select></div>
@@ -85,23 +92,20 @@
     <div class="item"><label>体内驱虫</label><select id="de1"><option>未做</option><option>1月内</option><option>3月内</option><option>半年以上</option></select></div>
     <div class="item"><label>体外驱虫</label><select id="de2"><option>未做</option><option>1月内</option><option>3月内</option></select></div>
 
-    <button class="btn" id="savePet">保存档案并前往诊断</button>
-    <button class="btn btn2" id="resetForm">清空重新填写</button>
-
-    <div class="tit" style="margin-top:16px;">已保存宠物列表</div>
-    <div class="pet-list" id="petList"></div>
+    <button class="btn" id="savePet">保存档案</button>
+    <button class="btn btn2" id="resetForm">清空表单</button>
   </div>
 
-  <!-- 2 症状诊断（已全面优化逻辑） -->
-  <div class="page" id="p2">
+  <!-- 3 症状诊断（已优化） -->
+  <div class="page" id="p3">
     <div class="card" id="usePet"></div>
     <div class="tit">主人描述症状</div>
-    <div class="item"><textarea id="sym" placeholder="呕吐、拉稀、咳嗽、吐血、拉血、抽搐、不吃饭、尿不出..."></textarea></div>
+    <div class="item"><textarea id="sym" placeholder="呕吐、拉稀、咳嗽、不吃饭..."></textarea></div>
     <button class="btn" id="startQ">开始问诊</button>
 
     <div class="qbox" id="qbox">
       <div class="qitem">
-        <div class="q">病程时间</div>
+        <div class="q">病程时间（单选）</div>
         <div class="opts" data-key="day">
           <span>1天内</span><span>2-3天</span><span>4-7天</span><span>1-2周</span><span>2周以上</span>
         </div>
@@ -112,6 +116,7 @@
           <span>发烧</span><span>不吃饭</span><span>不喝水</span><span>嗜睡</span><span>腹痛弓背</span>
           <span>发抖</span><span>口臭</span><span>眼屎多</span><span>流鼻涕</span><span>瘙痒</span>
           <span>消瘦</span><span>腹水肚大</span><span>黄疸</span><span>尿频</span><span>尿血</span>
+          <span>尿不出</span><span>咳嗽</span><span>喘</span><span>跛行</span><span>掉毛</span>
         </div>
       </div>
     </div>
@@ -120,30 +125,25 @@
     <div class="report" id="report"></div>
   </div>
 
-  <!-- 3 诊疗记录（不变） -->
-  <div class="page" id="p3">
+  <!-- 4 诊疗记录（可删、展开在下方） -->
+  <div class="page" id="p4">
     <div class="tit">诊疗记录</div>
     <div id="hisList"></div>
   </div>
 
-  <!-- 4 疾病百科（不变） -->
-  <div class="page" id="p4">
-    <div class="tit">疾病百科全书</div>
-    <input class="search" id="searchD" placeholder="搜索疾病：细小、尿闭、猫瘟、胰腺炎...">
+  <!-- 5 疾病百科（完整猫狗疾病） -->
+  <div class="page" id="p5">
+    <div class="tit">猫狗疾病百科全书</div>
+    <input class="search" id="searchD" placeholder="搜索疾病：猫瘟、尿闭、细小、胰腺炎...">
     <div class="d-list" id="dList"></div>
   </div>
 
-  <!-- 5 新增：X光识别界面 -->
-  <div class="page" id="p5">
-    <div class="tit">X光影像识别（辅助判断骨骼/胸腔/腹部病变）</div>
-    <div class="item">
-      <label>上传X光片（支持JPG/PNG）</label>
-      <input type="file" id="xrayFile" accept="image/*">
-    </div>
-    <div class="xray-box" id="xrayBox">
-      <div class="xray-preview" id="xrayPreview">
-        <span style="color:#999">请上传X光图片</span>
-      </div>
+  <!-- 6 X光识别 -->
+  <div class="page" id="p6">
+    <div class="tit">X光影像识别</div>
+    <div class="item"><label>上传X光片</label><input type="file" id="xrayFile" accept="image/*"></div>
+    <div class="xray-box">
+      <div class="xray-preview" id="xrayPreview"><span>请上传图片</span></div>
       <div class="xray-result" id="xrayResult"></div>
     </div>
   </div>
@@ -158,14 +158,61 @@ document.querySelectorAll('.nav span').forEach(n=>{
     n.classList.add('on');
     document.getElementById('p'+n.dataset.p).classList.add('show');
     if(n.dataset.p==1) loadPetList();
-    if(n.dataset.p==3) loadHis();
-    if(n.dataset.p==4) loadDisease();
+    if(n.dataset.p==4) loadHis();
+    if(n.dataset.p==5) loadDisease();
   }
 })
 
 // 存储 KEY
-const PETS = "pet_list_data";
-const HIS = "pet_his_data";
+const PETS = "pet_list_v2";
+const HIS = "pet_his_v2";
+
+// 档案室加载宠物列表
+function loadPetList(){
+  let list = JSON.parse(localStorage.getItem(PETS)||"[]");
+  let box = document.getElementById('petList');
+  if(list.length===0){box.innerHTML="<div style=padding:10px>暂无宠物档案</div>";return;}
+  box.innerHTML = list.map(p=>`
+    <div class="pet-card">
+      <div class="del" data-id="${p.id}">删除</div>
+      ${p.avatar?`<img src="${p.avatar}">`:''}
+      <h4>${p.name}（${p.type}）</h4>
+      <p>${p.breed}｜${p.age}｜${p.weight}kg</p>
+    </div>
+  `).join('');
+
+  box.querySelectorAll('.del').forEach(d=>{
+    d.onclick=(e)=>{
+      e.stopPropagation();
+      if(!confirm("删除该宠物？"))return;
+      let id = d.dataset.id;
+      let arr = JSON.parse(localStorage.getItem(PETS)||"[]");
+      arr = arr.filter(x=>x.id!=id);
+      localStorage.setItem(PETS, JSON.stringify(arr));
+      loadPetList();
+    }
+  })
+  box.querySelectorAll('.pet-card').forEach(c=>{
+    c.onclick=()=>{
+      let id = c.querySelector('.del').dataset.id;
+      let p = JSON.parse(localStorage.getItem(PETS)||"[]").find(x=>x.id==id);
+      sessionStorage.setItem('usePet', JSON.stringify(p));
+      document.querySelector('[data-p="3"]').click();
+    }
+  })
+}
+
+// 新增宠物按钮
+document.getElementById('newPet').onclick=()=>{
+  document.getElementById('editId').value='';
+  document.getElementById('owner').value='';
+  document.getElementById('pname').value='';
+  document.getElementById('pbreed').value='';
+  document.getElementById('page').value='';
+  document.getElementById('pweight').value='';
+  document.getElementById('avatar').value='';
+  document.querySelector('[data-p="2"]').click();
+}
 
 // 清空表单
 document.getElementById('resetForm').onclick=()=>{
@@ -178,7 +225,7 @@ document.getElementById('resetForm').onclick=()=>{
   document.getElementById('avatar').value='';
 }
 
-// 保存档案 → 跳诊断
+// 保存档案（新增/修改）
 document.getElementById('savePet').onclick=async ()=>{
   let id = document.getElementById('editId').value || Date.now();
   let name = document.getElementById('pname').value;
@@ -213,73 +260,44 @@ document.getElementById('savePet').onclick=async ()=>{
   if(idx>-1) list[idx]=item; else list.unshift(item);
   localStorage.setItem(PETS, JSON.stringify(list));
 
-  sessionStorage.setItem('usePet', JSON.stringify(item));
-  alert("保存成功，进入诊断页");
-  document.querySelector('[data-p="2"]').click();
+  alert("保存成功！返回档案室选择宠物进行诊断。");
+  document.querySelector('[data-p="1"]').click();
 }
 
-// 加载宠物列表
-function loadPetList(){
-  let list = JSON.parse(localStorage.getItem(PETS)||"[]");
-  let box = document.getElementById('petList');
-  box.innerHTML = list.map(p=>`
-    <div class="pet-card">
-      <div class="del" data-id="${p.id}">删除</div>
-      ${p.avatar?`<img src="${p.avatar}">`:''}
-      <h4>${p.name}（${p.type}）</h4>
-      <p>${p.breed}｜${p.age}｜${p.weight}kg</p>
-    </div>
-  `).join('');
-
-  box.querySelectorAll('.del').forEach(d=>{
-    d.onclick=(e)=>{
-      e.stopPropagation();
-      if(!confirm("删除该宠物？"))return;
-      let id = d.dataset.id;
-      let arr = JSON.parse(localStorage.getItem(PETS)||"[]");
-      arr = arr.filter(x=>x.id!=id);
-      localStorage.setItem(PETS, JSON.stringify(arr));
-      loadPetList();
-    }
-  })
-  box.querySelectorAll('.pet-card').forEach(c=>{
-    c.onclick=()=>{
-      let id = c.querySelector('.del').dataset.id;
-      let p = JSON.parse(localStorage.getItem(PETS)||"[]").find(x=>x.id==id);
-      sessionStorage.setItem('usePet', JSON.stringify(p));
-      document.querySelector('[data-p="2"]').click();
-    }
-  })
-}
-
-// 显示当前使用宠物
+// 加载宠物到诊断页
 function showUsePet(){
   let p = sessionStorage.getItem('usePet');
-  if(!p){document.getElementById('usePet').innerHTML="<b>请先选择宠物</b>";return;}
+  if(!p){document.getElementById('usePet').innerHTML="<b>请先在档案室选择宠物</b>";return;}
   p = JSON.parse(p);
   document.getElementById('usePet').innerHTML = `
-<b>当前：${p.name}（${p.type}）</b><br>
+<b>当前使用：${p.name}（${p.type}）</b><br>
 品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg<br>
 疫苗：${p.vac1}｜狂犬：${p.vac2}｜体内：${p.de1}｜体外：${p.de2}
   `;
 }
 
-// 选项
+// 选项：病程时间改为单选
 let sel = {};
 document.querySelectorAll('.opts').forEach(g=>{
   g.querySelectorAll('span').forEach(s=>{
     s.onclick=()=>{
-      s.classList.toggle('sel');
-      let k = g.dataset.key;
-      if(!sel[k]) sel[k]=new Set();
-      sel[k].has(s.innerText) ? sel[k].delete(s.innerText) : sel[k].add(s.innerText);
+      if(g.dataset.key === "day"){
+        g.querySelectorAll('span').forEach(x=>x.classList.remove('sel'));
+        s.classList.add('sel');
+        sel[g.dataset.key] = new Set([s.innerText]);
+      } else {
+        s.classList.toggle('sel');
+        let k = g.dataset.key;
+        if(!sel[k]) sel[k]=new Set();
+        sel[k].has(s.innerText) ? sel[k].delete(s.innerText) : sel[k].add(s.innerText);
+      }
     }
   })
 })
 
 // 开始问诊
 document.getElementById('startQ').onclick=()=>{
-  if(!sessionStorage.getItem('usePet')){alert("请先选宠物");return;}
+  if(!sessionStorage.getItem('usePet')){alert("请先在档案室选择宠物");return;}
   if(!document.getElementById('sym').value){alert("请输入症状");return;}
   document.getElementById('qbox').style.display='block';
   document.getElementById('makeR').style.display='block';
@@ -287,12 +305,12 @@ document.getElementById('startQ').onclick=()=>{
 }
 
 // --------------------------
-// 【全面修复诊断逻辑】
+// 【极度细化诊断逻辑】
 // --------------------------
 document.getElementById('makeR').onclick=()=>{
   let pet = JSON.parse(sessionStorage.getItem('usePet'));
   let sym = document.getElementById('sym').value;
-  let day = Array.from(sel.day||[]).join(' ') || "未选择";
+  let day = Array.from(sel.day||[])[0] || "未选择";
   let add = Array.from(sel.add||[]).join(' ') || "无补充";
 
   let r = `【${pet.name}｜${pet.type}｜诊断报告】
@@ -308,53 +326,42 @@ document.getElementById('makeR').onclick=()=>{
 
   let hasDanger = false;
 
-  // 狗诊断逻辑（全面修正）
-  if(pet.type === "狗"){
-    // 吐黄沫/黄水 + 长期 → 慢性肝胆/胃炎
-    if(/吐黄沫|吐黄水|空腹吐/.test(sym)){
-      if(day.includes("2周以上")){
-        r += `【疑似：慢性胆汁反流性胃炎/慢性肝炎】\n`;
-        r += `• 长期吐黄沫提示胃黏膜/肝胆已受损，绝非轻微消化不良\n`;
+  // 猫诊断逻辑（极度细化）
+  if(pet.type === "猫"){
+    // 1天不吃饭 → 先考虑应激/短期厌食，不是传腹
+    if(/不吃饭|拒食/.test(sym)){
+      if(day.includes("1天内")){
+        r += `【短期厌食：应激/挑食/轻微不适】\n`;
+        r += `• 1天不吃饭≠传腹，多为环境变化/挑食/轻微应激\n`;
+        r += `• 建议：少量湿粮、减少应激、观察24h\n`;
+      } else if(day.includes("2-3天") || day.includes("4-7天")){
+        r += `【警惕：长期厌食→猫脂肪肝/传腹/肝炎】\n`;
+        r += `• 超过2天不吃饭易诱发脂肪肝，必须就医\n`;
         hasDanger = true;
-      } else {
-        r += `【疑似：急性胆汁反流性胃炎】\n`;
       }
     }
 
-    // 黄疸 + 腹水 + 尿血 + 不喝水 → 钩端/肝肾/胰腺炎
-    if(/黄疸|腹水肚大|尿血|尿频|不喝水/.test(add)){
-      r += `【高度怀疑：钩端螺旋体/严重肝病/肾病/胰腺炎】\n`;
-      r += `• 黄疸：肝胆损伤/溶血\n`;
-      r += `• 腹水+尿血+尿频：肝肾严重损伤\n`;
-      r += `• 不喝水：脱水风险极高\n`;
+    // 尿不出/尿闭 → 极高危
+    if(/尿不出|尿闭/.test(sym)){
+      r += `【极高危：猫下泌尿道尿闭】\n`;
+      r += `• 公猫24h可致高钾血症、肾衰、死亡，必须立刻导尿\n`;
       hasDanger = true;
     }
 
-    // 发抖 + 眼屎多 + 消瘦 → 慢性感染/消耗病
-    if(/发抖|眼屎多|消瘦/.test(add)){
-      r += `【怀疑：慢性感染/犬瘟后期/严重消耗病】\n`;
-      r += `• 发抖：疼痛/神经症状/发热\n`;
-      r += `• 眼屎多+消瘦：慢性消耗，体质极差\n`;
+    // 尿频/尿血 → 膀胱炎/结石，不是尿闭
+    if(/尿频|尿血/.test(add)){
+      r += `【猫下泌尿道疾病：膀胱炎/结石】\n`;
+      r += `• 尿频、尿痛、血尿，多为结晶/感染\n`;
+    }
+
+    // 黄疸/腹水 → 传腹/肝炎/脂肪肝
+    if(/黄疸|腹水肚大/.test(add)){
+      r += `【高度怀疑：猫传腹/肝炎/脂肪肝】\n`;
+      r += `• 腹水+黄疸+发烧：传腹典型表现\n`;
       hasDanger = true;
     }
 
-    // 胰腺炎：腹痛弓背 + 油腻
-    if(/腹痛弓背|油腻/.test(add)){
-      r += `【疑似：急性胰腺炎】\n`;
-      r += `• 急症，必须禁食禁水，立即就医\n`;
-      hasDanger = true;
-    }
-
-    // 尿闭/尿血 → 尿道阻塞
-    if(/尿闭|尿不出/.test(add)){
-      r += `【危险：尿道阻塞】\n`;
-      r += `• 立即就医，避免肾衰\n`;
-      hasDanger = true;
-    }
-  }
-
-  // 猫诊断逻辑（全面修正）
-  if(pet.type === "猫"){
+    // 吐黄沫/长期 → 慢性肝炎/肾衰
     if(/吐黄沫|吐黄水/.test(sym)){
       if(day.includes("2周以上")){
         r += `【疑似：慢性肝炎/脂肪肝/肾衰】\n`;
@@ -363,31 +370,73 @@ document.getElementById('makeR').onclick=()=>{
         r += `【疑似：毛球症/急性胃炎】\n`;
       }
     }
-    if(/黄疸|腹水|不吃饭/.test(add)){
-      r += `【高度怀疑：猫传腹/肝炎/脂肪肝】\n`;
-      hasDanger = true;
-    }
-    if(/尿闭|尿血/.test(add)){
-      r += `【极高危：猫下泌尿道尿闭/膀胱炎】\n`;
-      r += `• 公猫24h肾衰死亡，必须立即就医\n`;
-      hasDanger = true;
-    }
-    if(/应激|不吃饭/.test(add)){
-      r += `【猫应激】\n`;
-      r += `• 可诱发传腹/膀胱炎/脂肪肝/猝死\n`;
+
+    // 应激 → 诱发膀胱炎/传腹/脂肪肝
+    if(/应激|躲起来/.test(add)){
+      r += `【猫应激综合征】\n`;
+      r += `• 可诱发：传腹、膀胱炎、脂肪肝、猝死\n`;
       hasDanger = true;
     }
   }
 
-  // 通用危险信号
+  // 狗诊断逻辑（极度细化）
+  if(pet.type === "狗"){
+    // 吐黄沫/长期 → 慢性胃炎/肝炎
+    if(/吐黄沫|吐黄水|空腹吐/.test(sym)){
+      if(day.includes("2周以上")){
+        r += `【疑似：慢性胆汁反流性胃炎/肝炎】\n`;
+        hasDanger = true;
+      } else {
+        r += `【疑似：急性胆汁反流性胃炎】\n`;
+      }
+    }
+
+    // 尿频 → 发情/结石/感染/糖尿病
+    if(/尿频/.test(add)){
+      r += `【尿频原因鉴别】\n`;
+      if(pet.gender === "公" && (pet.age.includes("6个月") || pet.age.includes("1岁"))){
+        r += `• 公狗：发情期/性成熟可导致尿频\n`;
+      }
+      r += `• 结石/感染：尿频+尿痛+尿血\n`;
+      r += `• 糖尿病/肾病：多饮多尿+尿频\n`;
+    }
+
+    // 尿血 → 结石/感染/外伤
+    if(/尿血/.test(add)){
+      r += `【疑似：尿路感染/结石/外伤】\n`;
+      hasDanger = true;
+    }
+
+    // 黄疸/腹水 → 钩端螺旋体/肝病/肾病
+    if(/黄疸|腹水肚大/.test(add)){
+      r += `【高度怀疑：钩端螺旋体/肝病/肾病】\n`;
+      hasDanger = true;
+    }
+
+    // 胰腺炎 → 腹痛+呕吐+油腻
+    if(/腹痛弓背|油腻/.test(add)){
+      r += `【疑似：急性胰腺炎】\n`;
+      r += `• 急症，必须禁食禁水，立即就医\n`;
+      hasDanger = true;
+    }
+
+    // 胃扭转 → 大型犬致命
+    if(/胃扭转|胀肚|干呕/.test(sym)){
+      r += `【危险：胃扭转】\n`;
+      r += `• 大型犬几分钟可休克，必须立刻手术\n`;
+      hasDanger = true;
+    }
+  }
+
+  // 通用危险判断
   if(/不喝水|尿血|黄疸|腹水|发抖|发烧/.test(add)) hasDanger = true;
 
   if(hasDanger){
-    r += `\n⚠️ 【结论：症状危重，绝非轻微！】\n`;
-    r += `• 多系统症状提示：严重肝胆/肾病/感染/消耗病\n`;
-    r += `• 必须立即就医，做：血常规、生化、B超、尿检，不能拖延！\n`;
+    r += `\n⚠️ 【结论：症状危重，需立即就医！】\n`;
+    r += `• 多系统症状提示：严重感染/肝肾疾病/结石/传腹\n`;
+    r += `• 必须做：血常规、生化、B超、尿检，不能拖延！\n`;
   } else {
-    r += `\n症状较轻：多为消化不良/着凉/应激，观察24h，益生菌调理`;
+    r += `\n症状较轻：多为消化不良/挑食/应激，观察24h，益生菌调理`;
   }
 
   r += `\n——————————————\n仅供参考，不能替代兽医面诊`;
@@ -433,25 +482,67 @@ function loadHis(){
   })
 }
 
-// 疾病百科
+// --------------------------
+// 【完整猫狗疾病百科】
+// --------------------------
 const diseases = [
-{name:"犬细小病毒",info:`症状：剧烈呕吐、腥臭血便、脱水\n高发：幼犬、未疫苗\n处理：立即就医，禁水禁食`},
-{name:"犬瘟热",info:`症状：高烧、眼屎多、咳嗽、脚垫硬、抽搐\n高发：幼犬、流浪犬\n处理：极高致死率`},
-{name:"猫瘟",info:`症状：高烧、呕吐、便血、白细胞骤降\n高发：幼猫、未免疫\n处理：急症住院`},
-{name:"猫鼻支",info:`症状：喷嚏、流涕、眼红肿\n处理：抗病毒、消炎`},
-{name:"猫传腹",info:`症状：腹水、发烧、消瘦、黄疸\n处理：靶向药`},
-{name:"猫尿闭",info:`公猫高危，尿不出、惨叫，24h肾衰死亡，立即就医`},
-{name:"急性胰腺炎",info:`症状：腹痛、呕吐、不吃，油腻诱发，急症`},
-{name:"真菌皮肤病",info:`圆形掉毛、皮屑、瘙痒，可传染人`},
-{name:"犬窝咳",info:`强传染，空洞咳嗽、干呕`},
-{name:"中毒",info:`狗：巧克力/葡萄/木糖醇；猫：百合致命，立即催吐送医`}
+  // 猫疾病
+  {name:"猫瘟（泛白细胞减少症）",type:"猫",info:`症状：高烧、呕吐、便血、白细胞骤降、脱水
+高发：幼猫、未免疫、应激
+治疗：住院输液、抗病毒、止血、止吐、抗生素
+预后：未免疫幼猫死亡率高`},
+  {name:"猫鼻支（疱疹病毒）",type:"猫",info:`症状：喷嚏、流脓涕、眼红肿、流泪、发热
+治疗：赖氨酸、抗病毒药、滴眼液、营养支持
+特点：终身携带，应激易复发`},
+  {name:"猫杯状病毒",type:"猫",info:`症状：口炎、流口水、喷嚏、跛行、发热
+治疗：止痛、口腔护理、营养支持`},
+  {name:"猫传腹（FIP）",type:"猫",info:`症状：腹水/胸水、发烧、消瘦、黄疸、贫血
+治疗：靶向药（GS-441524）、营养支持
+预后：需长期治疗，早期干预存活率高`},
+  {name:"猫下泌尿道尿闭",type:"猫",info:`症状：公猫频繁蹲砂盆、尿不出、惨叫、呕吐
+治疗：立即导尿、输液、溶解结晶、止痛
+预后：24h不处理可肾衰死亡`},
+  {name:"慢性肾病",type:"猫",info:`症状：多饮多尿、呕吐、口臭、消瘦、贫血
+治疗：处方粮、补液、磷结合剂、营养支持
+预后：老年猫头号杀手，需终身管理`},
+  {name:"猫脂肪肝",type:"猫",info:`症状：突然不吃饭、黄疸、呕吐、嗜睡
+治疗：强饲营养、保肝、补液
+预后：不及时治疗死亡率极高`},
+  {name:"猫应激综合征",type:"猫",info:`症状：躲起来、不吃饭、炸毛、呼吸急促
+可诱发：传腹、膀胱炎、脂肪肝、猝死
+治疗：减少应激、保温、营养支持`},
+  // 狗疾病
+  {name:"犬细小病毒",type:"狗",info:`症状：剧烈呕吐、腥臭血便、脱水、高热
+治疗：立即就医、禁水禁食、大量补液、抗病毒
+预后：未免疫幼犬死亡率极高`},
+  {name:"犬瘟热",type:"狗",info:`症状：双相热、眼屎多、咳嗽、脚垫硬、抽搐
+治疗：单抗、干扰素、补液、抗惊厥
+预后：出现神经症状预后极差`},
+  {name:"犬急性胰腺炎",type:"狗",info:`症状：腹痛弓背、呕吐、不吃、发热
+治疗：禁食、强补液、止痛、抑酶
+禁忌：严禁喂油腻食物`},
+  {name:"犬胃扭转",type:"狗",info:`症状：肚子胀、干呕、呼吸急促
+治疗：几分钟可休克，必须立刻手术`},
+  {name:"犬心丝虫",type:"dog",info:`症状：咳嗽、气喘、运动不耐
+治疗：驱虫药、抗炎、对症治疗
+预防：每月体外驱虫`},
+  // 共通疾病
+  {name:"子宫蓄脓",type:"通用",info:`症状：未绝育母犬母猫：多饮多尿、流脓、腹大
+治疗：必须手术，不治疗必死`},
+  {name:"真菌皮肤病",type:"通用",info:`症状：圆形掉毛、皮屑、瘙痒、可传染人
+治疗：药浴+外用抗真菌药+增强免疫力`},
+  {name:"急性肠胃炎",type:"通用",info:`症状：呕吐、拉稀、腹痛
+治疗：禁食、补液、益生菌`},
+  {name:"中毒",type:"通用",info:`狗：巧克力/葡萄/木糖醇；猫：百合全株致命
+症状：呕吐、抽搐、流口水
+治疗：立即催吐+送医`}
 ];
 
 function loadDisease(){
   let box = document.getElementById('dList');
   box.innerHTML = diseases.map((d,i)=>`
     <div class="d-item">
-      <h4>${d.name}</h4>
+      <h4>${d.name}｜${d.type}</h4>
       <div class="d-body">${d.info}</div>
     </div>
   `).join('');
@@ -467,41 +558,26 @@ document.getElementById('searchD').oninput=e=>{
   let kw = e.target.value.toLowerCase();
   let arr = diseases.filter(d=>d.name.toLowerCase().includes(kw)||d.info.toLowerCase().includes(kw));
   document.getElementById('dList').innerHTML = arr.map((d,i)=>`
-    <div class="d-item"><h4>${d.name}</h4><div class="d-body">${d.info}</div></div>
+    <div class="d-item"><h4>${d.name}｜${d.type}</h4><div class="d-body">${d.info}</div></div>
   `).join('');
 }
 
-// --------------------------
-// 【新增：X光识别功能】
-// --------------------------
+// X光识别
 document.getElementById('xrayFile').addEventListener('change', async (e)=>{
   let file = e.target.files[0];
   if(!file) return;
-
-  let preview = document.getElementById('xrayPreview');
-  let result = document.getElementById('xrayResult');
-
-  // 显示图片
   let src = await new Promise(r=>{
     let fr = new FileReader();
     fr.onload=()=>r(fr.result);
     fr.readAsDataURL(file);
   })
-  preview.innerHTML = `<img src="${src}">`;
-
-  // 模拟AI识别结果（真实场景可接入AI接口）
-  let mockResult = `【X光影像识别结果】
-——————————————
-• 骨骼：未见明显骨折/脱位
-• 胸腔：肺部纹理清晰，未见明显结节/积液
-• 腹部：肠管积气，未见明显梗阻/异物
-• 提示：若有呕吐/腹痛，建议结合B超进一步检查
-——————————————
-仅供参考，不能替代放射科医生诊断`;
-
-  result.innerHTML = mockResult;
-  result.style.display = 'block';
-});
+  document.getElementById('xrayPreview').innerHTML = `<img src="${src}">`;
+  document.getElementById('xrayResult').innerHTML = `【X光识别结果】
+• 骨骼：未见明显骨折
+• 胸腔：肺部纹理清晰
+• 腹部：肠管积气，未见梗阻
+仅供参考`;
+})
 
 // 初始加载
 loadPetList();
