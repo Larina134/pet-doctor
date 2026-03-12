@@ -15,6 +15,8 @@
   .nav span.on{background:#fff;color:#a0003c;border-bottom:2px solid #e64980;font-weight:600;}
   .page{padding:18px;display:none;}
   .page.show{display:block;}
+  .sub-page{padding:18px;display:none;}
+  .sub-page.show{display:block;}
   .tit{font-size:16px;color:#a00033;margin:10px 0 12px;border-bottom:1px solid #ffc4d8;padding-bottom:8px;}
   .item{margin-bottom:12px;}
   .item label{display:block;font-size:13px;color:#70002c;margin-bottom:4px;}
@@ -95,21 +97,20 @@
       <span data-p="6">X光识别</span>
     </div>
 
-    <div class="page show" id="p1">
+    <!-- 关键修改：将内部 page 改为 sub-page -->
+    <div class="sub-page show" id="p1">
       <div class="tit">宠物档案室（点击选择宠物诊断）</div>
       <div class="pet-list" id="petList"></div>
       <button class="btn" id="newPet" style="margin-top:10px">新增宠物</button>
     </div>
 
-    <div class="page" id="p2">
+    <div class="sub-page" id="p2">
       <div class="tit">宠物档案编辑</div>
       <input type="hidden" id="editId">
       <div class="item"><label>主人姓名</label><input id="owner"></div>
       <div class="item"><label>宠物名字</label><input id="pname"></div>
-      <!-- 1. 修改：种类选择框保留，新增品种联动选择框 -->
       <div class="item"><label>种类</label><select id="ptype"><option value="">请选择</option><option value="狗">狗</option><option value="猫">猫</option></select></div>
       <div class="item"><label>品种</label><select id="pbreed"><option value="">请先选择宠物种类</option></select></div>
-      <!-- 原输入框已替换为select -->
       <div class="item"><label>年龄</label><input id="page"></div>
       <div class="item"><label>体重(kg)</label><input id="pweight"></div>
       <div class="item"><label>性别</label><select id="pgender"><option>公</option><option>母</option></select></div>
@@ -128,7 +129,7 @@
       <button class="btn btn2" id="resetForm">清空表单</button>
     </div>
 
-    <div class="page" id="p3">
+    <div class="sub-page" id="p3">
       <div class="card" id="usePet"></div>
       <div class="tit">主人描述症状</div>
       <div class="item"><textarea id="sym" placeholder="请详细描述症状，例如：呕吐、拉稀、咳嗽、不吃饭、后腿瘫痪、腹水肚大..."></textarea></div>
@@ -159,7 +160,7 @@
       <div class="report" id="report"></div>
     </div>
 
-    <div class="page" id="p4">
+    <div class="sub-page" id="p4">
       <div class="tit">诊疗记录</div>
       <div class="delete-controls" id="deleteControls" style="display:none;">
         <button class="btn-select-all" id="selectAllBtn">全选/取消全选</button>
@@ -168,13 +169,13 @@
       <div id="hisList"></div>
     </div>
 
-    <div class="page" id="p5">
+    <div class="sub-page" id="p5">
       <div class="tit">猫狗全科疾病百科全书</div>
       <input class="search" id="searchD" placeholder="搜索疾病：猫瘟、尿闭、细小、胰腺炎...">
       <div class="d-list" id="dList"></div>
     </div>
 
-    <div class="page" id="p6">
+    <div class="sub-page" id="p6">
       <div class="tit">X光影像识别</div>
       <div class="item"><label>上传X光片</label><input type="file" id="xrayFile" accept="image/*"></div>
       <div class="xray-box">
@@ -209,6 +210,7 @@ function showMainPage() {
   document.getElementById('mainPage').classList.add('show');
   loadPetList();
   loadHis();
+  loadDisease(); // 新增：初始化疾病百科
 }
 
 document.getElementById('loginBtn').addEventListener('click', function() {
@@ -258,9 +260,11 @@ function getStorageKey(baseKey) {
 const PETS = "pet_list_v2";
 const HIS = "pet_his_v2";
 
+// 关键修改：只操作 sub-page 而不是所有 page
 document.querySelectorAll('.nav span').forEach(n=>{
   n.addEventListener('click', function() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+    // 只隐藏子页面，不影响外层 mainPage
+    document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('show'));
     document.querySelectorAll('.nav span').forEach(s => s.classList.remove('on'));
     this.classList.add('on');
     const targetPage = document.getElementById('p' + this.dataset.p);
@@ -271,7 +275,7 @@ document.querySelectorAll('.nav span').forEach(n=>{
   });
 })
 
-// 2. 新增：品种联动核心逻辑
+// 品种联动核心逻辑
 const breedData = {
   狗: [
     "泰迪", "贵宾", "比熊", "博美", "吉娃娃", "约克夏", "巴哥", "法斗", "柯基", "雪纳瑞",
@@ -481,7 +485,7 @@ document.getElementById('makeR').addEventListener('click', function() {
   let weightNum = parseFloat(pet.weight) || 0;
   let breed = (pet.breed || "").trim();
 
-  // ================= 品种体型库 =================
+  // 品种体型库
   let dogSize = "small"; // small / middle / large
   let catStandardWeight = 4.5;
 
@@ -530,7 +534,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     }
   }
 
-  // ================= 判断肥胖、老年 =================
+  // 判断肥胖、老年
   let isFat = false;
   let isOld = ageNum >= 8;
 
@@ -543,7 +547,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     isFat = weightNum > catStandardWeight * 1.2;
   }
 
-  // ================= 报告头部 =================
+  // 报告头部
   let r = `【${pet.name}｜${pet.type}｜诊断报告】
 ——————————————
 档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜性别：${pet.gender}｜绝育：${pet.sterile}
@@ -596,7 +600,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     {
       name:"猫艾滋",
       cond:()=>isCat && has("反复感染","口炎","消瘦"),
-      info:"【猫免疫缺陷病毒（FIV）】\n• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤",danger:true
+      info:"【猫免疫缺陷病毒（FIV/猫艾滋）】\n• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤",danger:true
     },
     {
       name:"猫哮喘",
