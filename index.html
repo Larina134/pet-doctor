@@ -2,14 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>🐾 宠物健康小助手</title>
+    <title>🐾 全科宠物健康诊断系统（狗·猫·鸟）</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-family: "PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
         }
         body {
             background: #fff5f8;
@@ -21,19 +21,18 @@
             margin: 0 auto;
             background: #fff;
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(255, 182, 193, 0.2);
+            box-shadow: 0 4px 18px rgba(255,182,193,0.25);
             overflow: hidden;
         }
         .header {
             background: #ffb6c1;
             color: #c2185b;
-            padding: 20px;
+            padding: 22px;
             text-align: center;
         }
         .header h1 {
             font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .header p {
             font-size: 14px;
@@ -41,18 +40,15 @@
         }
         .tab-bar {
             display: flex;
-            border-bottom: 1px solid #ffebee;
             background: #fff8fa;
         }
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 16px;
             text-align: center;
             font-size: 15px;
-            font-weight: 500;
             color: #f06292;
             cursor: pointer;
-            transition: all 0.3s;
         }
         .tab.active {
             color: #c2185b;
@@ -60,7 +56,7 @@
             background: #fff;
         }
         .content {
-            padding: 25px 20px;
+            padding: 26px 20px;
             display: none;
         }
         .content.active {
@@ -68,71 +64,87 @@
         }
         .section-title {
             font-size: 17px;
-            font-weight: 600;
             color: #c2185b;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 9px;
             border-bottom: 2px solid #ffb6c1;
         }
         .form-row {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
         .form-row label {
             display: block;
             font-size: 14px;
             color: #c2185b;
-            margin-bottom: 6px;
+            margin-bottom: 7px;
         }
-        .form-row input, .form-row select, .form-row textarea {
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
             width: 100%;
             padding: 12px;
             border: 1px solid #ffcdd2;
             border-radius: 12px;
             font-size: 14px;
-            outline: none;
-            transition: all 0.3s;
             background: #fff8fa;
+            outline: none;
         }
-        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+        .form-row input:focus,
+        .form-row select:focus,
+        .form-row textarea:focus {
             border-color: #f06292;
-            box-shadow: 0 0 0 3px rgba(240, 98, 146, 0.15);
-        }
-        .form-row textarea {
-            height: 120px;
-            resize: none;
+            box-shadow: 0 0 0 3px rgba(240,98,146,0.15);
         }
         .btn {
-            display: block;
             width: 100%;
             padding: 14px;
             background: #f06292;
-            color: white;
+            color: #fff;
             border: none;
             border-radius: 12px;
             font-size: 16px;
-            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
         }
         .btn:hover {
             background: #ec407a;
         }
+        .pet-info-card {
+            padding: 16px;
+            background: #ffebee;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #ad1457;
+        }
+        .pet-info-card h4 {
+            color: #c2185b;
+            margin-bottom: 8px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .checkbox-group label {
+            font-size: 13px;
+            color: #c2185b;
+        }
         .auto-questions {
-            margin-top: 20px;
-            padding: 20px;
+            margin-top: 22px;
+            padding: 22px;
             background: #fff8fa;
             border-radius: 16px;
             border: 1px solid #ffcdd2;
             display: none;
         }
         .question-item {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
         .question-text {
             font-size: 15px;
             color: #c2185b;
             margin-bottom: 10px;
-            font-weight: 500;
         }
         .options {
             display: flex;
@@ -145,18 +157,16 @@
             border-radius: 10px;
             font-size: 13px;
             color: #c2185b;
-            cursor: pointer;
             border: 1px solid #ffcdd2;
-            transition: all 0.2s;
         }
         .options input:checked + span {
             background: #f06292;
-            color: white;
+            color: #fff;
             border-color: #f06292;
         }
         .result {
-            margin-top: 25px;
-            padding: 20px;
+            margin-top: 26px;
+            padding: 22px;
             background: #fff8fa;
             border-radius: 16px;
             border: 1px solid #ffcdd2;
@@ -165,395 +175,376 @@
             white-space: pre-line;
             display: none;
         }
-        .danger {
-            color: #d32f2f;
-            font-weight: 600;
-        }
-        .warning {
-            color: #f57c00;
-            font-weight: 600;
-        }
-        .safe {
-            color: #388e3c;
-            font-weight: 600;
-        }
-        .pet-info-card {
-            padding: 15px;
-            background: #ffebee;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        .pet-info-card h4 {
-            color: #c2185b;
-            margin-bottom: 8px;
-        }
-        .pet-info-card p {
-            font-size: 13px;
-            color: #ad1457;
-            line-height: 1.6;
-        }
-        .checkbox-group {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 8px;
-        }
-        .checkbox-group label {
-            font-size: 13px;
-            color: #c2185b;
-            cursor: pointer;
-        }
+        .danger { color:#d32f2f; font-weight:600; }
+        .warning { color:#f57c00; font-weight:600; }
+        .safe { color:#388e3c; font-weight:600; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🐾 宠物健康小助手</h1>
-            <p>温暖陪伴 | 专业诊断 | 贴心护理</p>
-        </div>
-        <div class="tab-bar">
-            <div class="tab active" onclick="switchTab('profile')">🐾 宠物档案</div>
-            <div class="tab" onclick="switchTab('diagnosis')">🩺 健康诊断</div>
-            <div class="tab" onclick="switchTab('history')">📋 诊疗记录</div>
-        </div>
-
-        <!-- 宠物档案 -->
-        <div class="content active" id="profile">
-            <div class="section-title">动物基本信息（选填项可留空）</div>
-            <div class="form-row">
-                <label>动物主人/饲养单位（选填）</label>
-                <input type="text" id="ownerName" placeholder="如：张小姐">
-            </div>
-            <div class="form-row">
-                <label>宠物姓名</label>
-                <input type="text" id="petName" placeholder="如：多多">
-            </div>
-            <div class="form-row">
-                <label>宠物照片（选填）</label>
-                <input type="file" id="petPhoto" accept="image/*" style="padding:8px; background:#fff8fa; border:1px solid #ffcdd2; border-radius:12px;">
-                <div style="margin-top:10px; text-align:center;">
-                    <img id="previewPhoto" src="" alt="宠物照片预览" style="max-width:200px; max-height:200px; border-radius:12px; display:none; border:2px solid #ffcdd2;">
-                </div>
-            </div>
-            <div class="form-row">
-                <label>种类品种</label>
-                <input type="text" id="petBreed" placeholder="如：犬（哈士奇）或 猫（美短）">
-            </div>
-            <div class="form-row">
-                <label>宠物体重 (kg)（选填）</label>
-                <input type="number" id="petWeight" placeholder="如：26.8">
-            </div>
-            <div class="form-row">
-                <label>性别（选填）</label>
-                <select id="petGender">
-                    <option value="公">公</option>
-                    <option value="母">母</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <label>宠物毛色（选填）</label>
-                <input type="text" id="petCoat" placeholder="如：烟灰色/三花">
-            </div>
-            <div class="form-row">
-                <label>年（日）龄（选填，可简写）</label>
-                <input type="text" id="petAge" placeholder="如：2岁3月21天 或 2岁">
-            </div>
-            <!-- 新增疫苗模块 -->
-            <div class="form-row">
-                <label>是否已接种疫苗（选填）</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="isVaccinated" onchange="toggleVaccineInput()"> 已接种</label>
-                </div>
-            </div>
-            <div class="form-row" id="vaccineDosesRow" style="display:none;">
-                <label>已接种针数（选填）</label>
-                <select id="vaccineDoses">
-                    <option value="">请选择</option>
-                    <option value="1针">1针</option>
-                    <option value="2针">2针</option>
-                    <option value="3针">3针</option>
-                    <option value="4针及以上">4针及以上</option>
-                </select>
-            </div>
-            <div class="form-row" id="vaccineTypeRow" style="display:none;">
-                <label>疫苗品牌/种类（选填）</label>
-                <input type="text" id="vaccineType" placeholder="如：卫佳捌/妙三多">
-            </div>
-            <div class="section-title">日粮及免疫情况（选填）</div>
-            <div class="form-row">
-                <label>日粮品牌及饲喂方式</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="feedCommercialDry"> 商品干粮</label>
-                    <label><input type="checkbox" id="feedCommercialWet"> 商品湿粮</label>
-                    <label><input type="checkbox" id="feedHomemade" checked> 家庭自制</label>
-                    <label><input type="checkbox" id="feedSnacks"> 宠物零食</label>
-                </div>
-            </div>
-            <div class="form-row">
-                <label>饲喂频率</label>
-                <select id="feedFrequency">
-                    <option value="1次/日">1次/日</option>
-                    <option value="2次/日" selected>2次/日</option>
-                    <option value="3次/日">3次/日</option>
-                    <option value="自由采食">自由采食</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <label>近期食物变动（选填）</label>
-                <input type="text" id="foodChange" placeholder="最近暂无变化">
-            </div>
-            <div class="form-row">
-                <label>免疫及驱虫情况（选填）</label>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" id="dewormInternal" onchange="toggleDewormInput('internal')"> 体内驱虫</label>
-                    <label><input type="checkbox" id="dewormExternal" onchange="toggleDewormInput('external')"> 体外驱虫</label>
-                </div>
-            </div>
-            <div class="form-row" id="dewormInternalRow" style="display:none;">
-                <label>体内驱虫药品牌/名称（选填）</label>
-                <input type="text" id="dewormInternalDrug" placeholder="如：犬心保">
-            </div>
-            <div class="form-row" id="dewormInternalFreqRow" style="display:none;">
-                <label>体内驱虫频率（选填）</label>
-                <input type="text" id="dewormInternalFreq" placeholder="如：1个月/次">
-            </div>
-            <div class="form-row" id="dewormExternalRow" style="display:none;">
-                <label>体外驱虫药品牌/名称（选填）</label>
-                <input type="text" id="dewormExternalDrug" placeholder="如：福来恩">
-            </div>
-            <div class="form-row" id="dewormExternalFreqRow" style="display:none;">
-                <label>体外驱虫频率（选填）</label>
-                <input type="text" id="dewormExternalFreq" placeholder="如：1个月/次">
-            </div>
-            <button class="btn" onclick="savePet()">💾 保存宠物档案</button>
-        </div>
-
-        <!-- 健康诊断 -->
-        <div class="content" id="diagnosis">
-            <div id="petInfoCard" class="pet-info-card" style="display:none;">
-                <h4>当前就诊宠物</h4>
-                <p id="petInfoText"></p>
-            </div>
-            <div class="section-title">主诉信息</div>
-            <div class="form-row">
-                <label>请详细描述宠物当前症状</label>
-                <textarea id="chiefComplaint" placeholder="如：吐黄水、后肢跛行、咳嗽、头歪斜等..."></textarea>
-            </div>
-            <button class="btn" onclick="genQuestions()">✨ 生成问诊</button>
-            <div class="auto-questions" id="questions">
-                <div class="section-title">补充细节（系统自动生成）</div>
-                <div id="questionList"></div>
-                <button class="btn" onclick="analyze()">🩺 生成诊断报告</button>
-            </div>
-            <div class="result" id="result"></div>
-        </div>
-
-        <!-- 诊疗记录 -->
-        <div class="content" id="history">
-            <div class="section-title">诊疗历史</div>
-            <div id="historyList" style="font-size:14px; color:#c2185b; line-height:1.8;"></div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>🐾 全科宠物健康诊断系统</h1>
+        <p>狗 · 猫 · 鹦鹉（鸟类）全科疾病智能判断</p>
+    </div>
+    <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('profile')">📋 宠物档案</div>
+        <div class="tab" onclick="switchTab('diagnosis')">🩺 健康诊断</div>
+        <div class="tab" onclick="switchTab('history')">📁 诊疗记录</div>
     </div>
 
-    <script>
-        let currentPet = null;
-        let selectedAnswers = {};
-        let diagnosisHistory = JSON.parse(localStorage.getItem("diagnosisHistory")) || [];
+    <!-- 档案 -->
+    <div class="content active" id="profile">
+        <div class="section-title">动物基本信息</div>
+        <div class="form-row">
+            <label>主人姓名（选填）</label>
+            <input type="text" id="ownerName" placeholder="如：李女士">
+        </div>
+        <div class="form-row">
+            <label>宠物姓名</label>
+            <input type="text" id="petName" placeholder="如：多多、咪咪、小鹦">
+        </div>
+        <div class="form-row">
+            <label>动物类型</label>
+            <select id="petType">
+                <option value="狗">狗</option>
+                <option value="猫">猫</option>
+                <option value="鹦鹉/鸟类">鹦鹉/鸟类</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>品种</label>
+            <input type="text" id="petBreed" placeholder="如：泰迪、布偶、虎皮鹦鹉">
+        </div>
+        <div class="form-row">
+            <label>体重 kg（选填）</label>
+            <input type="text" id="petWeight" placeholder="如：5.2">
+        </div>
+        <div class="form-row">
+            <label>性别（选填）</label>
+            <select id="petGender">
+                <option value="公">公</option>
+                <option value="母">母</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <label>年龄（选填）</label>
+            <input type="text" id="petAge" placeholder="如：2岁、6个月、1年">
+        </div>
 
-        // 切换标签
-        function switchTab(tab) {
-            document.querySelectorAll(".content").forEach(c => c.classList.remove("active"));
-            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-            document.getElementById(tab).classList.add("active");
-            document.querySelector(`.tab-bar .tab:nth-child(${tab === 'profile' ? 1 : tab === 'diagnosis' ? 2 : 3})`).classList.add("active");
-            if (tab === 'diagnosis' && currentPet) {
-                document.getElementById("petInfoCard").style.display = "block";
-                let vaccineInfo = "";
-                if (currentPet.isVaccinated) {
-                    vaccineInfo = ` | 已接种疫苗：${currentPet.vaccineDoses || '未填针数'} ${currentPet.vaccineType || ''}`;
-                } else {
-                    vaccineInfo = " | 未接种疫苗";
-                }
-                document.getElementById("petInfoText").innerHTML = `
-                    ${currentPet.petName} | ${currentPet.petBreed} | ${currentPet.petWeight || '未填写'}kg | ${currentPet.petGender} | ${currentPet.petAge || '未填写'}<br>
-                    主人：${currentPet.ownerName || '未填写'} | 饲喂：${currentPet.feedFrequency}${vaccineInfo}
-                `;
-            }
-            if (tab === 'history') renderHistory();
+        <div class="form-row">
+            <label>是否已接种疫苗</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="isVaccinated" onchange="toggleVaccine()"> 已接种</label>
+            </div>
+        </div>
+        <div class="form-row" id="vaccineRow" style="display:none;">
+            <label>接种针数</label>
+            <select id="vaccineDoses">
+                <option value="">请选择</option>
+                <option>1针</option>
+                <option>2针</option>
+                <option>3针</option>
+                <option>4针及以上</option>
+            </select>
+        </div>
+
+        <div class="section-title">驱虫信息</div>
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="dewormIn" onchange="toggleIn()"> 体内驱虫</label>
+            <label><input type="checkbox" id="dewormOut" onchange="toggleOut()"> 体外驱虫</label>
+        </div>
+        <div class="form-row" id="dewormInRow" style="display:none;">
+            <label>体内驱虫药（选填）</label>
+            <input type="text" id="dewormInName" placeholder="如：犬心保、海乐妙">
+        </div>
+        <div class="form-row" id="dewormInFreq" style="display:none;">
+            <label>驱虫频率</label>
+            <input type="text" placeholder="如：1月/次、3月/次">
+        </div>
+        <div class="form-row" id="dewormOutRow" style="display:none;">
+            <label>体外驱虫药（选填）</label>
+            <input type="text" placeholder="如：福来恩、大宠爱">
+        </div>
+
+        <button class="btn" onclick="saveProfile()">💾 保存档案</button>
+    </div>
+
+    <!-- 诊断 -->
+    <div class="content" id="diagnosis">
+        <div class="pet-info-card" id="petCard" style="display:none;">
+            <h4>当前宠物</h4>
+            <p id="petInfoText"></p>
+        </div>
+
+        <div class="section-title">主诉症状（描述越详细越准确）</div>
+        <div class="form-row">
+            <textarea id="symptom" placeholder="例如：呕吐、拉稀、咳嗽、打喷嚏、羽毛蓬松、不进食、嗜睡、抽搐..."></textarea>
+        </div>
+        <button class="btn" onclick="makeQuestions()">✅ 开始智能问诊</button>
+
+        <div class="auto-questions" id="qBox">
+            <div class="section-title">系统自动匹配症状问诊</div>
+            <div id="questionList"></div>
+            <button class="btn" onclick="makeDiag()">🩺 生成完整诊断报告</button>
+        </div>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <!-- 记录 -->
+    <div class="content" id="history">
+        <div class="section-title">历史诊疗记录</div>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+let pet = null;
+let ans = {};
+let records = JSON.parse(localStorage.getItem("records")) || [];
+
+function switchTab(id) {
+    document.querySelectorAll(".content").forEach(c=>c.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    document.querySelectorAll(".tab")[id=="profile"?0:id=="diagnosis"?1:2].classList.add("active");
+    if(id=="diagnosis" && pet) showPet();
+    if(id=="history") showHistory();
+}
+
+function toggleVaccine(){
+    document.getElementById("vaccineRow").style.display = document.getElementById("isVaccinated").checked?"block":"none";
+}
+function toggleIn(){
+    document.getElementById("dewormInRow").style.display = document.getElementById("dewormIn").checked?"block":"none";
+    document.getElementById("dewormInFreq").style.display = document.getElementById("dewormIn").checked?"block":"none";
+}
+function toggleOut(){
+    document.getElementById("dewormOutRow").style.display = document.getElementById("dewormOut").checked?"block":"none";
+}
+
+function saveProfile(){
+    let name = document.getElementById("petName").value;
+    let type = document.getElementById("petType").value;
+    let breed = document.getElementById("petBreed").value;
+    if(!name || !breed){ alert("请填写宠物姓名和品种"); return; }
+    pet = {
+        owner:document.getElementById("ownerName").value,
+        name,type,breed,
+        weight:document.getElementById("petWeight").value,
+        gender:document.getElementById("petGender").value,
+        age:document.getElementById("petAge").value,
+        vac:document.getElementById("isVaccinated").checked,
+        doses:document.getElementById("vaccineDoses").value
+    };
+    alert("档案保存成功");
+    switchTab("diagnosis");
+}
+
+function showPet(){
+    document.getElementById("petCard").style.display = "block";
+    let v = pet.vac ? `已接种 ${pet.doses||""}` : "未接种疫苗";
+    document.getElementById("petInfoText").innerHTML =
+    `${pet.name} | ${pet.type} | ${pet.breed} | ${pet.weight||""}kg | ${pet.age||""}岁<br>主人：${pet.owner||""} | ${v}`;
+}
+
+function q(id,text,opts){
+    let div = document.createElement("div");
+    div.className = "question-item";
+    let html = `<div class="question-text">${text}</div><div class="options">`;
+    opts.forEach(o=>{
+        html+=`<label><input type="checkbox" onchange="sv('${id}','${o}')"><span>${o}</span></label>`;
+    });
+    html+="</div>";
+    div.innerHTML = html;
+    document.getElementById("questionList").appendChild(div);
+}
+
+function sv(k,v){
+    if(!ans[k]) ans[k]=[];
+    let idx = ans[k].indexOf(v);
+    idx>-1 ? ans[k].splice(idx,1) : ans[k].push(v);
+}
+
+function makeQuestions(){
+    let s = document.getElementById("symptom").value;
+    if(!s){ alert("请输入症状"); return; }
+    if(!pet){ alert("请先保存档案"); return; }
+    document.getElementById("qBox").style.display = "block";
+    document.getElementById("questionList").innerHTML = "";
+    ans = {};
+
+    if(pet.type=="狗"){
+        if(/吐|呕|黄水|白沫/.test(s)) q("g1","呕吐相关：",["吐黄水","吐白沫","吐食物","吐血","空腹吐"]);
+        if(/拉|稀|软便|血便/.test(s)) q("g2","排便：",["稀便","水样便","血便","黑色便","虫体"]);
+        if(/咳|喘|鼻涕/.test(s)) q("g3","呼吸：",["干咳","湿咳","脓鼻涕","清鼻涕","呼吸急促"]);
+        if(/跛|瘸|跳|疼/.test(s)) q("g4","四肢：",["三脚跳","不敢跳","关节肿","碰就叫"]);
+        if(/痒|挠|皮|屑|秃/.test(s)) q("g5","皮肤：",["瘙痒","皮屑","脱毛","红疹","结痂"]);
+        if(/眼|泪|眼屎/.test(s)) q("g6","眼部：",["流泪","眼屎多","红肿","角膜浑浊"]);
+        if(/发烧|热|没精神|不吃/.test(s)) q("g7","全身：",["发热","嗜睡","拒食","消瘦","腹胀"]);
+        if(/抽|颠|站不稳/.test(s)) q("g8","神经：",["抽搐","站不稳","转圈","口吐白沫"]);
+    }
+
+    if(pet.type=="猫"){
+        if(/吐|毛球|黄水/.test(s)) q("m1","呕吐：",["吐毛球","吐黄水","干呕","频繁吐"]);
+        if(/拉|稀|血便|软便/.test(s)) q("m2","排便：",["软便","稀便","血便","便秘"]);
+        if(/喷嚏|鼻涕|咳/.test(s)) q("m3","呼吸：",["打喷嚏","清鼻涕","脓鼻涕","咳嗽"]);
+        if(/口|口臭|流涎/.test(s)) q("m4","口腔：",["口臭","流口水","牙龈红肿","拒食干粮"]);
+        if(/尿|尿频|血尿/.test(s)) q("m5","泌尿：",["频繁进猫砂盆","少尿","血尿","蹲很久尿不出"]);
+        if(/皮肤|痒|秃/.test(s)) q("m6","皮肤：",["瘙痒","斑秃","皮屑","黑下巴"]);
+        if(/精神|不吃|发烧/.test(s)) q("m7","全身：",["嗜睡","拒食","发热","消瘦"]);
+    }
+
+    if(pet.type=="鹦鹉/鸟类"){
+        if(/炸毛|蓬松|缩脖子/.test(s)) q("b1","精神：",["羽毛蓬松","炸毛","嗜睡","缩脖子"]);
+        if(/不吃|不喝|消瘦/.test(s)) q("b2","食欲：",["拒食","吃得少","体重下降"]);
+        if(/拉稀|绿便|血便/.test(s)) q("b3","粪便：",["稀便","绿色便","血色便","水样便"]);
+        if(/打喷嚏|鼻涕|呼吸/.test(s)) q("b4","呼吸：",["打喷嚏","流鼻涕","呼吸杂音","张口呼吸"]);
+        if(/眼|流泪|肿眼/.test(s)) q("b5","眼部：",["流泪","眼肿","闭眼","分泌物"]);
+        if(/鼻|鼻孔|脏/.test(s)) q("b6","鼻部：",["鼻孔脏","结痂","堵塞"]);
+        if(/脚|站不稳|跛/.test(s)) q("b7","足部：",["站立不稳","跛行","关节肿"]);
+    }
+
+    q("all","持续时间：",["1天内","2-3天","一周以上"]);
+}
+
+function makeDiag(){
+    let s = document.getElementById("symptom").value;
+    let t = pet.type;
+    let r = "【"+pet.name+"·"+t+"·完整诊断报告】\n\n";
+    let care = "\n【护理与治疗建议】\n";
+    let level = "safe";
+
+    if(t=="狗"){
+        if(ans.g1?.includes("吐黄水") && ans.g1?.includes("空腹吐")){
+            r+="🟡 高度怀疑：胆汁反流性胃炎\n";
+            r+="• 典型：空腹呕吐黄色胆汁，进食后缓解\n";
+            care+="• 少量多餐，喂易消化食物，可喂胃黏膜保护剂\n• 24小时无改善就医\n";
         }
-
-        // 切换驱虫输入框显示
-        function toggleDewormInput(type) {
-            const isInternal = type === 'internal';
-            const row = document.getElementById(`deworm${isInternal ? 'Internal' : 'External'}Row`);
-            const freqRow = document.getElementById(`deworm${isInternal ? 'Internal' : 'External'}FreqRow`);
-            const checkbox = document.getElementById(`deworm${type}`);
-            const display = checkbox.checked ? "block" : "none";
-            row.style.display = display;
-            freqRow.style.display = display;
+        if(ans.g2?.includes("虫体")){
+            r+="🟡 确诊：肠道寄生虫感染\n";
+            r+="• 蛔虫/绦虫多见，消瘦、腹胀、软便\n";
+            care+="• 立即广谱体内驱虫，2周后复驱\n• 保持环境清洁\n";
         }
-
-        // 切换疫苗输入框显示
-        function toggleVaccineInput() {
-            const checkbox = document.getElementById("isVaccinated");
-            const dosesRow = document.getElementById("vaccineDosesRow");
-            const typeRow = document.getElementById("vaccineTypeRow");
-            const display = checkbox.checked ? "block" : "none";
-            dosesRow.style.display = display;
-            typeRow.style.display = display;
+        if(ans.g3?.includes("干咳") && ans.g3?.includes("呼吸急促")){
+            r+="🟠 怀疑：犬窝咳 / 传染性支气管炎\n";
+            r+="• 高度传染，阵发性咳嗽，运动后加重\n";
+            care+="• 隔离、保暖、止咳化痰\n• 建议尽快就医排查感染\n";
+            level="warning";
         }
-
-        // 预览宠物照片
-        document.getElementById("petPhoto").addEventListener("change", function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById("previewPhoto");
-                    img.src = e.target.result;
-                    img.style.display = "block";
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // 保存宠物档案
-        function savePet() {
-            const petName = document.getElementById("petName").value;
-            const petBreed = document.getElementById("petBreed").value;
-            if (!petName || !petBreed) {
-                alert("请填写宠物姓名和品种！");
-                return;
-            }
-            currentPet = {
-                ownerName: document.getElementById("ownerName").value,
-                petName, petBreed,
-                petWeight: document.getElementById("petWeight").value,
-                petGender: document.getElementById("petGender").value,
-                petCoat: document.getElementById("petCoat").value,
-                petAge: document.getElementById("petAge").value,
-                feedFrequency: document.getElementById("feedFrequency").value,
-                foodChange: document.getElementById("foodChange").value,
-                isVaccinated: document.getElementById("isVaccinated").checked,
-                vaccineDoses: document.getElementById("vaccineDoses").value,
-                vaccineType: document.getElementById("vaccineType").value,
-                dewormInternal: document.getElementById("dewormInternal").checked,
-                dewormInternalDrug: document.getElementById("dewormInternalDrug").value,
-                dewormInternalFreq: document.getElementById("dewormInternalFreq").value,
-                dewormExternal: document.getElementById("dewormExternal").checked,
-                dewormExternalDrug: document.getElementById("dewormExternalDrug").value,
-                dewormExternalFreq: document.getElementById("dewormExternalFreq").value
-            };
-            alert("宠物档案保存成功！");
-            switchTab('diagnosis');
+        if(ans.g4?.includes("三脚跳") && ["泰迪","比熊","博美","吉娃娃"].some(x=>pet.breed.includes(x))){
+            r+="🟡 怀疑：髌骨脱位\n";
+            r+="• 小型犬高发，突然跛行、三脚跳\n";
+            care+="• 限制运动，禁止跳跃，补充关节保护剂\n• 严重需手术\n";
         }
-
-        // 生成问诊问题
-        function genQuestions() {
-            const desc = document.getElementById("chiefComplaint").value;
-            const qList = document.getElementById("questionList");
-            const qBox = document.getElementById("questions");
-            qList.innerHTML = "";
-            selectedAnswers = {};
-            if (!desc) { alert("请先填写主诉信息！"); return; }
-            if (!currentPet) { alert("请先保存宠物档案！"); return; }
-
-            if (/头歪|斜颈/.test(desc)) addQuestion("q1", "头颈部症状：", ["单侧歪头", "眼球震颤", "流口水"]);
-            if (/跛行|腿瘸/.test(desc)) addQuestion("q2", "肢体症状：", ["后肢三脚跳", "不愿上下楼", "关节疼痛"]);
-            if (/吐黄水|呕吐/.test(desc)) addQuestion("q3", "呕吐情况：", ["吐黄水/泡沫", "频繁呕吐", "吐带血"]);
-            if (/拉稀|软便/.test(desc)) addQuestion("q4", "排便情况：", ["软便", "水样便", "便中有虫"]);
-            if (/咳嗽|流鼻涕/.test(desc)) addQuestion("q5", "呼吸道症状：", ["干咳", "流涕", "呼吸急促"]);
-            if (qList.children.length === 0) addQuestion("q0", "是否有以下情况：", ["精神差", "食欲下降"]);
-            qBox.style.display = "block";
+        if(ans.g5?.includes("脱毛") && ans.g5?.includes("结痂")){
+            r+="🟡 怀疑：真菌/螨虫皮肤病\n";
+            r+="• 脱毛、瘙痒、皮屑、圆形秃斑\n";
+            care+="• 体外驱虫+药浴，佩戴伊丽莎白圈防舔\n• 持续2周以上就医\n";
         }
-
-        function addQuestion(id, text, opts) {
-            const div = document.createElement("div");
-            div.className = "question-item";
-            div.innerHTML = `
-                <div class="question-text">${text}</div>
-                <div class="options">
-                    ${opts.map(opt => `
-                        <label>
-                            <input type="checkbox" name="${id}" value="${opt}" onchange="saveAnswer('${id}','${opt}')">
-                            <span>${opt}</span>
-                        </label>
-                    `).join('')}
-                </div>
-            `;
-            document.getElementById("questionList").appendChild(div);
+        if(ans.g8?.includes("抽搐") || ans.g8?.includes("口吐白沫")){
+            r+="🔴 危险：疑似癫痫 / 中毒 / 脑炎\n";
+            r+="• 神经症状属于急症，可能危及生命\n";
+            care+="• 立即就医，不要自行喂药\n• 保持安静，避免刺激\n";
+            level="danger";
         }
-
-        function saveAnswer(qid, val) {
-            if (!selectedAnswers[qid]) selectedAnswers[qid] = [];
-            const idx = selectedAnswers[qid].indexOf(val);
-            idx > -1 ? selectedAnswers[qid].splice(idx, 1) : selectedAnswers[qid].push(val);
+        if(ans.g7?.includes("发热") && ans.g7?.includes("拒食")){
+            r+="🟠 怀疑：全身性炎症/感染\n";
+            care+="• 物理降温，少量补水，尽快就医\n";
+            level="warning";
         }
+    }
 
-        // 专业诊断逻辑
-        function analyze() {
-            const res = document.getElementById("result");
-            let txt = `【${currentPet.petName} 专业诊断报告】\n`;
-            let advice = "\n【治疗与护理方案】\n";
-            let danger = false;
-
-            if (selectedAnswers.q3?.includes("吐黄水/泡沫")) {
-                txt += "🟠 可能：慢性胃炎/胆汁反流综合征\n";
-                txt += "   典型表现：空腹时吐黄色胆汁，进食后缓解，食欲时好时坏\n";
-            }
-            if (selectedAnswers.q4?.includes("便中有虫")) {
-                txt += "🟡 明确诊断：肠道寄生虫感染（蛔虫/绦虫）\n";
-                txt += "   典型表现：粪便中可见虫体/虫卵，消瘦、软便、腹胀\n";
-            }
-            if (["泰迪", "比熊", "吉娃娃", "博美"].some(b => currentPet.petBreed.includes(b)) && selectedAnswers.q2?.includes("后肢三脚跳")) {
-                txt += "🟡 可能：髌骨脱位（Ⅱ级）\n";
-                txt += "   典型表现：突然跛行、三脚跳、不愿上下楼梯，休息后缓解\n";
-            }
-            if (selectedAnswers.q1 && selectedAnswers.q2) {
-                txt += "🔴 高度怀疑：前庭综合征（外周型）\n";
-                txt += "   典型表现：突发性头歪斜+步态不稳，常伴中耳/内耳感染\n";
-                danger = true;
-            }
-            if (selectedAnswers.q5?.includes("干咳") && selectedAnswers.q5?.includes("呼吸急促")) {
-                txt += "🟠 可能：犬窝咳/肺炎\n";
-                txt += "   典型表现：阵发性干咳、运动后加重，严重时伴发热\n";
-            }
-
-            if (danger) {
-                advice = "\n⚠️ 【紧急处理】请立即带宠物就医！\n";
-                advice += "   就诊前：禁食禁水，注意保暖，避免剧烈运动\n";
-            } else {
-                advice = "\n✅ 【居家护理】\n";
-                if (selectedAnswers.q3?.includes("吐黄水/泡沫")) advice += "• 饮食：少量多餐喂易消化粮，可喂硫糖铝保护胃黏膜\n";
-                if (selectedAnswers.q4?.includes("便中有虫")) advice += "• 驱虫：立即用广谱体内驱虫药，2周后复驱\n";
-                if (selectedAnswers.q2?.includes("后肢三脚跳")) advice += "• 关节：限制运动，避免上下楼梯，补充软骨素\n";
-                if (selectedAnswers.q5) advice += "• 呼吸道：注意保暖，喂温水，避免剧烈运动\n";
-                advice += "• 观察24小时，若症状加重请及时就医\n";
-            }
-
-            if (txt === `【${currentPet.petName} 专业诊断报告】\n`) {
-                txt += "• 目前症状轻微，多为应激或短期不适\n";
-                advice = "\n【建议】正常喂养，注意保暖，持续观察即可。";
-            }
-
-            diagnosisHistory.push({ petName: currentPet.petName, date: new Date().toLocaleString(), result: txt + advice });
-            localStorage.setItem("diagnosisHistory", JSON.stringify(diagnosisHistory));
-            res.innerHTML = txt + advice;
-            res.style.display = "block";
+    if(t=="猫"){
+        if(ans.m1?.includes("吐毛球") && ans.m1?.includes("干呕")){
+            r+="🟢 常见：毛球症\n";
+            r+="• 猫咪梳理毛发吞入过多，正常现象\n";
+            care+="• 喂化毛膏/猫草，少量多餐\n";
         }
-
-        // 渲染历史记录
-        function renderHistory() {
-            const list = document.getElementById("historyList");
-            if (diagnosisHistory.length === 0) { list.innerHTML = "暂无诊疗记录"; return; }
-            list.innerHTML = diagnosisHistory.map(h => `
-                <div style="padding:15px; background:#fff8fa; border-radius:12px; margin-bottom:12px; border:1px solid #ffcdd2;">
-                    <h4 style="color:#c2185b; margin-bottom:8px;">${h.petName} | ${h.date}</h4>
-                    <p style="font-size:13px; color:#ad1457;">${h.result.substring(0, 100)}...</p>
-                </div>
-            `).join('');
+        if(ans.m2?.includes("血便")){
+            r+="🟠 注意：下消化道出血/寄生虫/炎症\n";
+            care+="• 禁食4-6小时，少量补水，24小时不改善就医\n";
+            level="warning";
         }
+        if(ans.m3?.includes("打喷嚏") && ans.m3?.includes("清鼻涕")){
+            r+="🟡 常见：猫鼻支初期 / 感冒\n";
+            r+="• 疱疹病毒高发，流泪、打喷嚏、精神尚可\n";
+            care+="• 保暖、补充赖氨酸、增加饮水\n• 加重立即就医\n";
+        }
+        if(ans.m4?.includes("口臭") && ans.m4?.includes("流口水")){
+            r+="🟡 怀疑：口炎 / 牙周病\n";
+            care+="• 软食喂养，口腔清洁，严重就医洁牙\n";
+        }
+        if(ans.m5?.includes("血尿") || ans.m5?.includes("少尿")){
+            r+="🔴 危险：猫下泌尿道疾病（可能尿闭）\n";
+            r+="• 公猫尤其危险，数小时可危及生命\n";
+            care+="• 立即就医导尿，拖延会肾衰竭死亡\n";
+            level="danger";
+        }
+        if(ans.m6?.includes("斑秃") && ans.m6?.includes("黑下巴")){
+            r+="🟡 常见：猫癣 / 毛囊炎\n";
+            care+="• 局部抗真菌药，环境消毒，佩戴伊丽莎白圈\n";
+        }
+        if(ans.m7?.includes("拒食") && ans.m7?.includes("嗜睡")){
+            r+="🟠 危险信号：重度炎症/传腹/感染\n";
+            care+="• 必须就医检查炎症、肝功能\n";
+            level="warning";
+        }
+    }
 
-        window.onload = () => switchTab('profile');
-    </script>
+    if(t=="鹦鹉/鸟类"){
+        if(ans.b1?.includes("炸毛") && ans.b1?.includes("嗜睡")){
+            r+="🟠 全身状态差：虚弱/受寒/感染\n";
+            r+="• 鸟类精神差=病情已较重\n";
+            care+="• 立即保温28-30℃，避风，补充葡萄糖\n• 24小时无改善就医\n";
+            level="warning";
+        }
+        if(ans.b3?.includes("绿色便") || ans.b3?.includes("血便")){
+            r+="🟠 肠道感染 / 原虫 / 肝肾问题\n";
+            care+="• 停油腻坚果，喂清淡谷物，益生菌调理\n• 持续必须就医\n";
+            level="warning";
+        }
+        if(ans.b4?.includes("呼吸杂音") || ans.b4?.includes("张口呼吸")){
+            r+="🔴 危险：呼吸道感染/气囊炎/支原体\n";
+            care+="• 保温、通风、隔离、立即就医\n• 鸟类肺炎死亡率高\n";
+            level="danger";
+        }
+        if(ans.b5?.includes("眼肿") || ans.b6?.includes("鼻孔脏")){
+            r+="🟡 常见：鹦鹉热 / 眼部鼻型感染\n";
+            care+="• 清洁眼鼻，环境消毒，建议就医\n";
+        }
+        if(ans.b2?.includes("拒食")){
+            r+="🟠 危险：体力快速下降\n";
+            care+="• 强饲温水+葡萄糖，保温，尽快就医\n";
+            level="warning";
+        }
+    }
+
+    if(r=="【"+pet.name+"·"+t+"·完整诊断报告】\n\n"){
+        r+="• 症状较轻，多为短期应激、轻微不适\n";
+        care+="• 正常喂养，注意环境稳定，持续观察即可。\n";
+    }
+
+    let final = (level=="danger"?"⚠️ 紧急程度：极高\n\n":"") + r + care;
+    document.getElementById("result").innerHTML = final;
+    document.getElementById("result").style.display = "block";
+
+    records.unshift({name:pet.name,type:t,time:new Date().toLocaleString(),text:final});
+    localStorage.setItem("records",JSON.stringify(records));
+}
+
+function showHistory(){
+    let dom = document.getElementById("historyList");
+    if(records.length===0){ dom.innerHTML="暂无记录"; return; }
+    dom.innerHTML = records.map(i=>`
+        <div style="padding:16px;background:#fff8fa;border-radius:12px;margin-bottom:12px;border:1px solid #ffcdd2;">
+            <h4 style="color:#c2185b;margin-bottom:8px;">${i.name}(${i.type}) · ${i.time}</h4>
+            <p style="font-size:13px;color:#ad1457;">${i.text.substring(0,110)}...</p>
+        </div>
+    `).join("");
+}
+
+window.onload = ()=> switchTab("profile");
+</script>
 </body>
 </html>
