@@ -133,7 +133,7 @@
       <div class="card" id="usePet"></div>
       <div class="tit">主人描述症状</div>
       <div class="item"><textarea id="sym" placeholder="请详细描述症状，例如：呕吐、拉稀、咳嗽、不吃饭、后腿瘫痪、腹水肚大..."></textarea></div>
-      <button class="btn" id="aiDiagnoseBtn">AI智能诊断（DeepSeek）</button>
+      <button class="btn" id="aiDiagnoseBtn">AI智能诊断</button>
       <div class="ai-loading" id="aiLoading" style="display:none">AI正在思考诊断中，请稍候...</div>
       <div class="report" id="report"></div>
     </div>
@@ -173,11 +173,11 @@
 const USERS_KEY = "users";
 let currentUser = null;
 
-// DeepSeek 配置（你可以替换自己的API Key）
+ // 豆包 API 配置（你现在的 Key 直接用）
 const DEEPSEEK_CONFIG = {
-  apiKey: "sk-4c01e475e5c44204bdbd1b0ae04c25fd",
-  model: "deepseek-chat",
-  url: "https://api.deepseek.com/v1/chat/completions"
+  apiKey: "513a8125-87ec-4538-87e4-265eed1255bb",
+  model: "doubao-pro-128k-character",
+  url: "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 };
 
 // 登录校验
@@ -427,7 +427,7 @@ document.getElementById('aiDiagnoseBtn').addEventListener('click', async functio
 ${aiText}
 
 ——————————————
-⚠️ 本报告由DeepSeek AI生成，仅供参考，重症请立即就医`;
+⚠️ 本报告由AI生成，仅供参考，重症请立即就医`;
 
     report.innerText = fullReport;
     report.style.display = "block";
@@ -453,7 +453,7 @@ ${aiText}
 });
 
 // =============================================
-// DeepSeek AI 疾病百科问答（核心新增）
+//  AI 疾病百科问答（核心新增）
 // =============================================
 document.getElementById('aiDiseaseBtn').addEventListener('click', async function() {
   const q = document.getElementById('aiDiseaseQuery').value.trim();
