@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>猫狗全科诊疗系统（DeepSeek AI版）</title>
+<title>猫狗全科诊疗系统（豆包 AI版）</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial;}
@@ -88,7 +88,7 @@
 
   <div class="page" id="mainPage">
     <button class="logout-btn" id="logoutBtn">退出登录</button>
-    <div class="head"><h1>猫狗全科诊疗系统（AI版）</h1></div>
+    <div class="head"><h1>猫狗全科诊疗系统（豆包 AI版）</h1></div>
     <div class="nav">
       <span class="on" data-p="1">档案室</span>
       <span data-p="2">档案编辑</span>
@@ -148,7 +148,7 @@
     </div>
 
     <div class="sub-page" id="p5">
-      <div class="tit">AI疾病百科（DeepSeek问答）</div>
+      <div class="tit">AI疾病百科（豆包问答）</div>
       <div class="item">
         <label>请输入疾病问题（如：猫瘟怎么治、狗细小症状、胰腺炎护理）</label>
         <textarea id="aiDiseaseQuery" rows="3" placeholder="例如：猫尿闭怎么处理？狗呕吐黄沫是什么病？"></textarea>
@@ -173,10 +173,10 @@
 const USERS_KEY = "users";
 let currentUser = null;
 
- // 豆包 API 配置（你现在的 Key 直接用）
+// 豆包 API 配置（修复版）
 const DEEPSEEK_CONFIG = {
   apiKey: "513a8125-87ec-4538-87e4-265eed1255bb",
-  model: "doubao-pro-128k-character",
+  model: "doubao-pro", // 改用兼容更好的模型名
   url: "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 };
 
@@ -378,7 +378,7 @@ document.getElementById('savePet').addEventListener('click', async function() {
 });
 
 // =============================================
-// DeepSeek AI 智能诊断（核心新增）
+// 豆包 AI 智能诊断（修复核心）
 // =============================================
 document.getElementById('aiDiagnoseBtn').addEventListener('click', async function() {
   const petStr = sessionStorage.getItem('usePet');
@@ -400,8 +400,10 @@ document.getElementById('aiDiagnoseBtn').addEventListener('click', async functio
 主人描述症状：${sym}
 请给出：1.可能疾病 2.紧急程度 3.家庭处理 4.就医建议 5.注意事项`;
 
+    // 发送请求（新增详细配置+错误校验）
     const res = await fetch(DEEPSEEK_CONFIG.url, {
       method: "POST",
+      mode: "cors", // 显式声明跨域
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${DEEPSEEK_CONFIG.apiKey}`
@@ -410,14 +412,21 @@ document.getElementById('aiDiagnoseBtn').addEventListener('click', async functio
         model: DEEPSEEK_CONFIG.model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
-        max_tokens: 1500
+        max_tokens: 1500,
+        stream: false // 关闭流式返回
       })
     });
 
-    const data = await res.json();
-    const aiText = data.choices?.[0]?.message?.content || "AI返回异常";
+    // 新增：校验HTTP响应状态
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: "未知错误" }));
+      throw new Error(`API返回错误 [${res.status}]：${errorData.error?.message || errorData.message}`);
+    }
 
-    const fullReport = `【${pet.name}｜DeepSeek AI 智能诊断】
+    const data = await res.json();
+    const aiText = data.choices?.[0]?.message?.content || "未获取到诊断结果";
+
+    const fullReport = `【${pet.name}｜豆包 AI 智能诊断】
 ——————————————
 档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜${pet.gender}｜${pet.sterile}
 疫苗：${pet.vac1} 狂犬：${pet.vac2}
@@ -427,7 +436,7 @@ document.getElementById('aiDiagnoseBtn').addEventListener('click', async functio
 ${aiText}
 
 ——————————————
-⚠️ 本报告由AI生成，仅供参考，重症请立即就医`;
+⚠️ 本报告由豆包 AI 生成，仅供参考，重症请立即就医`;
 
     report.innerText = fullReport;
     report.style.display = "block";
@@ -445,15 +454,22 @@ ${aiText}
     localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
 
   } catch (e) {
-    report.innerText = "AI请求失败：" + e.message + "\n请检查网络或API密钥是否正确";
+    // 显示详细错误信息（方便排查）
+    report.innerText = `AI请求失败：
+1. 错误原因：${e.message}
+2. 排查建议：
+   - 请用本地服务器访问（python -m http.server 8080）
+   - 检查API Key是否正确：513a8125-87ec-4538-87e4-265eed1255bb
+   - 打开浏览器F12控制台查看详细报错`;
     report.style.display = "block";
+    console.error("完整错误日志：", e); // 控制台打印详细日志
   } finally {
     loading.style.display = "none";
   }
 });
 
 // =============================================
-//  AI 疾病百科问答（核心新增）
+// 豆包 AI 疾病百科问答（同步修复）
 // =============================================
 document.getElementById('aiDiseaseBtn').addEventListener('click', async function() {
   const q = document.getElementById('aiDiseaseQuery').value.trim();
@@ -471,6 +487,7 @@ document.getElementById('aiDiseaseBtn').addEventListener('click', async function
 
     const res = await fetch(DEEPSEEK_CONFIG.url, {
       method: "POST",
+      mode: "cors",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${DEEPSEEK_CONFIG.apiKey}`
@@ -479,17 +496,28 @@ document.getElementById('aiDiseaseBtn').addEventListener('click', async function
         model: DEEPSEEK_CONFIG.model,
         messages: [{ role: "user", content: prompt }],
         temperature: 0.2,
-        max_tokens: 1200
+        max_tokens: 1200,
+        stream: false
       })
     });
 
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ message: "未知错误" }));
+      throw new Error(`API返回错误 [${res.status}]：${errorData.error?.message || errorData.message}`);
+    }
+
     const data = await res.json();
-    const aiText = data.choices?.[0]?.message?.content || "AI返回异常";
-    result.innerText = `【DeepSeek AI 疾病解答】\n问题：${q}\n——————————————\n${aiText}`;
+    const aiText = data.choices?.[0]?.message?.content || "未获取到解答结果";
+    result.innerText = `【豆包 AI 疾病解答】\n问题：${q}\n——————————————\n${aiText}`;
     result.style.display = "block";
   } catch (e) {
-    result.innerText = "查询失败：" + e.message;
+    result.innerText = `查询失败：
+1. 错误原因：${e.message}
+2. 排查建议：
+   - 请用本地服务器访问（python -m http.server 8080）
+   - 检查API Key是否正确`;
     result.style.display = "block";
+    console.error("百科查询错误：", e);
   } finally {
     loading.style.display = "none";
   }
