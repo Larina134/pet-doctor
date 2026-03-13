@@ -1017,9 +1017,10 @@ document.getElementById('makeR').addEventListener('click', function() {
 • 接触后立即清洗
 • 越早治疗预后越好`,
       danger:true
-    },
+    }
+  ]; // 新增这行，闭合rules数组
    
-   const diseases = [
+   const diseaseList = [ // 变量名改为diseaseList，避免重复
   // ========== 狗专属疾病 ==========
   {
     name: "犬细小",
@@ -2841,22 +2842,15 @@ function loadDisease(){
   })
 }
 
-document.getElementById('searchD').addEventListener('input',loadDisease);
-  
-  // 搜索功能
-  document.getElementById('searchD').addEventListener('input', function() {
-    const keyword = this.value.toLowerCase().trim();
-    const items = document.querySelectorAll('.d-item');
-    
-    items.forEach((item, i) => {
-      const name = diseaseList[i].name.toLowerCase();
-      if (keyword === '' || name.includes(keyword) || diseaseList[i].info.toLowerCase().includes(keyword)) {
-        item.style.display = 'block';
-      } else {
-        item.style.display = 'none';
-      }
-    });
-  });
+
+ document.getElementById('searchD').addEventListener('input', loadDisease);
+} // 这行是loadDisease函数的闭合
+
+// 搜索功能（删除重复的搜索事件绑定，保留上面的即可）
+// 切换疾病详情
+function toggleDisease(index) {
+  const el = document.getElementById(`d-${index}`);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
 }
 
 // 切换疾病详情
