@@ -1026,7 +1026,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "犬细小",
     cond: () => isDog && isUnvaccinated,
     symptoms: ["高烧", "呕吐", "便血", "腥臭", "脱水"],
-    excludeSymptoms: ["单纯咳嗽", "皮肤癣", "关节疼痛"],
+    exclude: ["单纯咳嗽", "皮肤癣", "关节疼痛"],
     duration: "1-2周",
     info: `【犬细小病毒｜专业诊断】
 一、病因
@@ -1062,7 +1062,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "犬瘟热",
     cond: () => isDog && isUnvaccinated,
     symptoms: ["高烧", "眼屎多", "咳嗽", "抽搐", "脚垫硬"],
-    excludeSymptoms: ["牙齿", "牙黄", "牙疼", "口腔"],
+    exclude: ["牙齿", "牙黄", "牙疼", "口腔"],
     duration: "2周以上",
     info: `【犬瘟热｜专业诊断】
 一、病因
@@ -1099,7 +1099,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "犬窝咳",
     cond: () => isDog,
     symptoms: ["咳嗽", "干呕", "精神尚可"],
-    excludeSymptoms: ["呕吐血便", "黄疸", "尿闭", "神经症状"],
+    exclude: ["呕吐血便", "黄疸", "尿闭", "神经症状"],
     duration: "4-7天",
     info: `【犬窝咳｜专业诊断】
 一、病因
@@ -1130,7 +1130,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "犬副流感",
     cond: () => isDog,
     symptoms: ["咳嗽", "流鼻涕", "发烧", "精神差"],
-    excludeSymptoms: ["血便", "腹水", "尿闭", "剧烈呕吐"],
+    exclude: ["血便", "腹水", "尿闭", "剧烈呕吐"],
     duration: "1-2周",
     info: `【犬副流感｜专业诊断】
 一、病因
@@ -1159,7 +1159,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "胃扭转",
     cond: () => isDog && (dogSize === "large" || dogSize === "middle"),
     symptoms: ["腹部胀大", "干呕", "呼吸急促"],
-    excludeSymptoms: ["呕吐胆汁", "吐黄沫", "吐黄水", "咳嗽", "皮肤问题", "腹泻", "关节痛"],
+    exclude: ["呕吐胆汁", "吐黄沫", "吐黄水", "咳嗽", "皮肤问题", "腹泻", "关节痛"],
     duration: "1天内",
     info: `【胃扭转（致命急症）｜专业诊断】
 一、病因
@@ -1194,7 +1194,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "胃胀气",
     cond: () => isDog && (dogSize === "large" || dogSize === "middle"),
     symptoms: ["腹部胀大", "干呕", "呼吸急促", "不适"],
-    excludeSymptoms: ["咳嗽", "皮肤问题", "腹泻", "关节痛"],
+    exclude: ["咳嗽", "皮肤问题", "腹泻", "关节痛"],
     duration: "1天内",
     info: `【胃胀气｜专业诊断】
 一、病因
@@ -1222,7 +1222,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "犬心丝虫",
     cond: () => isDog,
     symptoms: ["咳嗽", "喘", "腹水肚大", "运动不耐"],
-    excludeSymptoms: ["呕吐血便", "尿闭", "皮肤感染"],
+    exclude: ["呕吐血便", "尿闭", "皮肤感染"],
     duration: "2周以上",
     info: `【犬心丝虫｜专业诊断】
 一、病因
@@ -1251,7 +1251,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "气管塌陷",
     cond: () => isDog && dogSize === "small",
     symptoms: ["咳嗽", "鹅叫样", "运动后喘"],
-    excludeSymptoms: ["呕吐", "腹泻", "血便", "尿闭", "黄疸"],
+    exclude: ["呕吐", "腹泻", "血便", "尿闭", "黄疸"],
     duration: "2周以上",
     info: `【气管塌陷｜专业诊断】
 一、病因
@@ -1280,7 +1280,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "莱姆病",
     cond: () => isDog,
     symptoms: ["发烧", "关节肿痛", "精神差"],
-    excludeSymptoms: ["呕吐血便", "尿闭", "腹水", "神经抽搐"],
+    exclude: ["呕吐血便", "尿闭", "腹水", "神经抽搐"],
     duration: "1-2周",
     info: `【莱姆病｜专业诊断】
 一、病因
@@ -1308,7 +1308,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "钩端螺旋体病",
     cond: () => isDog,
     symptoms: ["发烧", "黄疸", "尿血", "肝肾损伤"],
-    excludeSymptoms: ["单纯咳嗽", "皮肤癣", "关节痛"],
+    exclude: ["单纯咳嗽", "皮肤癣", "关节痛"],
     duration: "1-2周",
     info: `【钩端螺旋体病｜专业诊断】
 一、病因
@@ -1337,7 +1337,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "狂犬病",
     cond: () => true,
     symptoms: ["狂躁", "流口水", "攻击", "瘫痪"],
-    excludeSymptoms: ["单纯腹泻", "咳嗽", "皮肤问题"],
+    exclude: ["单纯腹泻", "咳嗽", "皮肤问题"],
     duration: "2周以上",
     info: `【狂犬病（可传染人）｜专业诊断】
 一、病因
@@ -1366,7 +1366,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "跳蚤感染",
     cond: () => true,
     symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
-    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    exclude: ["高热", "呕吐", "便血", "神经抽搐"],
     duration: "2周以上",
     info: `【跳蚤感染｜专业诊断】
 一、病因
@@ -1394,7 +1394,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "蜱虫感染",
     cond: () => true,
     symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
-    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    exclude: ["高热", "呕吐", "便血", "神经抽搐"],
     duration: "2周以上",
     info: `【蜱虫感染｜专业诊断】
 一、病因
@@ -1421,7 +1421,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "耳螨感染",
     cond: () => true,
     symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
-    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    exclude: ["高热", "呕吐", "便血", "神经抽搐"],
     duration: "2周以上",
     info: `【耳螨感染｜专业诊断】
 一、病因
@@ -1448,7 +1448,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "疥螨感染",
     cond: () => true,
     symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
-    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    exclude: ["高热", "呕吐", "便血", "神经抽搐"],
     duration: "2周以上",
     info: `【疥螨感染｜专业诊断】
 一、病因
@@ -1474,7 +1474,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "蠕形螨感染",
     cond: () => true,
     symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
-    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    exclude: ["高热", "呕吐", "便血", "神经抽搐"],
     duration: "2周以上",
     info: `【蠕形螨感染｜专业诊断】
 一、病因
@@ -1500,7 +1500,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "蛔虫病",
     cond: () => true,
     symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
-    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    exclude: ["高热不退", "皮肤癣", "呼吸困难"],
     duration: "2周以上",
     info: `【蛔虫病｜专业诊断】
 一、病因
@@ -1526,7 +1526,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "钩虫病",
     cond: () => true,
     symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
-    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    exclude: ["高热不退", "皮肤癣", "呼吸困难"],
     duration: "2周以上",
     info: `【钩虫病｜专业诊断】
 一、病因
@@ -1551,7 +1551,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "绦虫病",
     cond: () => true,
     symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
-    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    exclude: ["高热不退", "皮肤癣", "呼吸困难"],
     duration: "2周以上",
     info: `【绦虫病｜专业诊断】
 一、病因
@@ -1578,7 +1578,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "球虫病",
     cond: () => true,
     symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
-    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    exclude: ["高热不退", "皮肤癣", "呼吸困难"],
     duration: "2周以上",
     info: `【球虫病｜专业诊断】
 一、病因
@@ -1604,7 +1604,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "滴虫病",
     cond: () => true,
     symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
-    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    exclude: ["高热不退", "皮肤癣", "呼吸困难"],
     duration: "2周以上",
     info: `【滴虫病｜专业诊断】
 一、病因
@@ -1630,7 +1630,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "弓形虫病",
     cond: () => true,
     symptoms: ["发热", "淋巴结肿大", "神经症状"],
-    excludeSymptoms: ["剧烈腹泻", "皮肤癣", "呼吸道症状"],
+    exclude: ["剧烈腹泻", "皮肤癣", "呼吸道症状"],
     duration: "2周以上",
     info: `【弓形虫病｜专业诊断】
 一、病因
@@ -1656,7 +1656,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "贾第虫病",
     cond: () => true,
     symptoms: ["软便", "黏液便", "反复腹泻"],
-    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    exclude: ["高热", "剧烈呕吐", "神经症状"],
     duration: "2周以上",
     info: `【贾第虫病（可传染人）｜专业诊断】
 一、病因
@@ -1682,7 +1682,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "猫癣",
     cond: () => true,
     symptoms: ["圆形掉毛", "皮屑", "瘙痒"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "呼吸困难"],
+    exclude: ["呕吐腹泻", "高热", "呼吸困难"],
     duration: "2周以上",
     info: `【猫癣（可传染人）｜专业诊断】
 一、病因
@@ -1708,7 +1708,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "狗癣",
     cond: () => true,
     symptoms: ["圆形掉毛", "皮屑", "瘙痒"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "呼吸困难"],
+    exclude: ["呕吐腹泻", "高热", "呼吸困难"],
     duration: "2周以上",
     info: `【狗癣（可传染人）｜专业诊断】
 一、病因
@@ -1734,7 +1734,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "细菌性脓皮症",
     cond: () => true,
     symptoms: ["皮肤红疹", "脓包", "破皮", "异味"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽", "神经症状"],
+    exclude: ["呕吐腹泻", "发热咳嗽", "神经症状"],
     duration: "1-2周",
     info: `【细菌性脓皮症｜专业诊断】
 一、病因
@@ -1760,7 +1760,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "过敏性皮炎",
     cond: () => true,
     symptoms: ["瘙痒", "红斑", "丘疹", "渗出", "脱毛"],
-    excludeSymptoms: ["呕吐腹泻", "发热便血"],
+    exclude: ["呕吐腹泻", "发热便血"],
     duration: "1-2周",
     info: `【过敏性皮炎｜专业诊断】
 一、病因
@@ -1786,7 +1786,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "湿疹",
     cond: () => true,
     symptoms: ["瘙痒", "红斑", "丘疹", "渗出", "脱毛"],
-    excludeSymptoms: ["呕吐腹泻", "发热便血"],
+    exclude: ["呕吐腹泻", "发热便血"],
     duration: "1-2周",
     info: `【湿疹｜专业诊断】
 一、病因
@@ -1812,7 +1812,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "脂溢性皮炎",
     cond: () => true,
     symptoms: ["皮屑多", "油脂旺", "瘙痒", "脱毛"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    exclude: ["呕吐腹泻", "发热咳嗽"],
     duration: "2周以上",
     info: `【脂溢性皮炎｜专业诊断】
 一、病因
@@ -1838,7 +1838,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "急性肠胃炎",
     cond: () => true,
     symptoms: ["呕吐", "拉稀", "腹痛", "食欲差"],
-    excludeSymptoms: ["高热不退", "神经抽搐", "血尿"],
+    exclude: ["高热不退", "神经抽搐", "血尿"],
     duration: "2-3天",
     info: `【急性肠胃炎｜专业诊断】
 一、病因
@@ -1864,7 +1864,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "慢性肠胃炎",
     cond: () => true,
     symptoms: ["呕吐", "拉稀", "腹痛", "食欲差"],
-    excludeSymptoms: ["高热不退", "神经抽搐", "血尿"],
+    exclude: ["高热不退", "神经抽搐", "血尿"],
     duration: "2周以上",
     info: `【慢性肠胃炎｜专业诊断】
 一、病因
@@ -1891,7 +1891,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "胰腺炎",
     cond: () => true && isFat,
     symptoms: ["腹痛弓背", "呕吐", "不吃饭", "油腻饮食史"],
-    excludeSymptoms: ["血便", "皮肤感染", "神经症状"],
+    exclude: ["血便", "皮肤感染", "神经症状"],
     duration: "4-7天",
     info: `【胰腺炎（重症）｜专业诊断】
 一、病因
@@ -1918,7 +1918,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "便秘",
     cond: () => true,
     symptoms: ["排便困难", "腹痛", "食欲差"],
-    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    exclude: ["高热", "剧烈呕吐", "神经症状"],
     duration: "1-2周",
     info: `【便秘｜专业诊断】
 一、病因
@@ -1943,7 +1943,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "腹泻",
     cond: () => true,
     symptoms: ["稀便", "腹痛", "食欲差"],
-    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    exclude: ["高热", "剧烈呕吐", "神经症状"],
     duration: "2-3天",
     info: `【腹泻｜专业诊断】
 一、病因
@@ -1968,7 +1968,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "消化道异物",
     cond: () => true,
     symptoms: ["呕吐", "便秘", "腹胀", "腹痛"],
-    excludeSymptoms: ["皮肤癣", "咳嗽流涕"],
+    exclude: ["皮肤癣", "咳嗽流涕"],
     duration: "1-2周",
     info: `【消化道异物｜专业诊断】
 一、病因
@@ -1994,7 +1994,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "肠梗阻",
     cond: () => true,
     symptoms: ["呕吐", "腹痛", "拒食", "精神差"],
-    excludeSymptoms: ["皮肤癣", "咳嗽流涕"],
+    exclude: ["皮肤癣", "咳嗽流涕"],
     duration: "1-2周",
     info: `【肠梗阻｜专业诊断】
 一、病因
@@ -2019,7 +2019,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "肝胆疾病",
     cond: () => true,
     symptoms: ["皮肤黄染", "呕吐", "厌食", "精神差"],
-    excludeSymptoms: ["咳嗽流涕", "皮肤癣斑"],
+    exclude: ["咳嗽流涕", "皮肤癣斑"],
     duration: "2周以上",
     info: `【肝胆疾病｜专业诊断】
 一、病因
@@ -2045,7 +2045,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "黄疸",
     cond: () => true,
     symptoms: ["皮肤黄染", "呕吐", "厌食", "精神差"],
-    excludeSymptoms: ["咳嗽流涕", "皮肤癣斑"],
+    exclude: ["咳嗽流涕", "皮肤癣斑"],
     duration: "2周以上",
     info: `【黄疸｜专业诊断】
 一、病因
@@ -2071,7 +2071,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "膀胱炎",
     cond: () => true,
     symptoms: ["尿频", "尿急", "尿痛", "血尿"],
-    excludeSymptoms: ["呕吐腹泻", "咳嗽", "神经症状"],
+    exclude: ["呕吐腹泻", "咳嗽", "神经症状"],
     duration: "1-2周",
     info: `【膀胱炎｜专业诊断】
 一、病因
@@ -2097,7 +2097,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "尿路感染",
     cond: () => true,
     symptoms: ["尿频", "尿急", "尿痛", "血尿"],
-    excludeSymptoms: ["呕吐腹泻", "咳嗽", "神经症状"],
+    exclude: ["呕吐腹泻", "咳嗽", "神经症状"],
     duration: "1-2周",
     info: `【尿路感染｜专业诊断】
 一、病因
@@ -2123,7 +2123,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "膀胱结石",
     cond: () => true,
     symptoms: ["排尿困难", "血尿", "尿频", "尿闭"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    exclude: ["呕吐腹泻", "高热", "咳嗽"],
     duration: "1-2周",
     info: `【膀胱结石｜专业诊断】
 一、病因
@@ -2149,7 +2149,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "尿道结石",
     cond: () => true,
     symptoms: ["排尿困难", "血尿", "尿频", "尿闭"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    exclude: ["呕吐腹泻", "高热", "咳嗽"],
     duration: "1-2周",
     info: `【尿道结石｜专业诊断】
 一、病因
@@ -2175,7 +2175,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "急性肾衰竭",
     cond: () => true && isOld,
     symptoms: ["呕吐", "厌食", "少尿", "贫血"],
-    excludeSymptoms: ["咳嗽流涕", "皮肤感染"],
+    exclude: ["咳嗽流涕", "皮肤感染"],
     duration: "2周以上",
     info: `【急性肾衰竭｜专业诊断】
 一、病因
@@ -2202,7 +2202,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "慢性肾衰竭",
     cond: () => true && isOld,
     symptoms: ["呕吐", "厌食", "多饮多尿", "贫血"],
-    excludeSymptoms: ["咳嗽流涕", "皮肤感染"],
+    exclude: ["咳嗽流涕", "皮肤感染"],
     duration: "2周以上",
     info: `【慢性肾衰竭｜专业诊断】
 一、病因
@@ -2228,7 +2228,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "血尿",
     cond: () => true,
     symptoms: ["尿液带血", "排尿痛苦"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    exclude: ["呕吐腹泻", "高热", "咳嗽"],
     duration: "1-2周",
     info: `【血尿｜专业诊断】
 一、病因
@@ -2253,7 +2253,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "感冒",
     cond: () => true,
     symptoms: ["咳嗽", "流涕", "打喷嚏", "低热", "精神差"],
-    excludeSymptoms: ["呕吐", "拉稀", "抽搐", "便血"],
+    exclude: ["呕吐", "拉稀", "抽搐", "便血"],
     duration: "2-3天",
     info: `【感冒（上呼吸道感染）｜专业诊断】
 一、病因
@@ -2278,7 +2278,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "支气管炎",
     cond: () => true,
     symptoms: ["咳嗽", "咳痰", "发热", "呼吸急促"],
-    excludeSymptoms: ["呕吐腹泻", "便血", "神经症状"],
+    exclude: ["呕吐腹泻", "便血", "神经症状"],
     duration: "1-2周",
     info: `【支气管炎｜专业诊断】
 一、病因
@@ -2303,7 +2303,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "肺炎",
     cond: () => true,
     symptoms: ["咳嗽", "咳痰", "发热", "呼吸急促"],
-    excludeSymptoms: ["呕吐腹泻", "便血", "神经症状"],
+    exclude: ["呕吐腹泻", "便血", "神经症状"],
     duration: "1-2周",
     info: `【肺炎｜专业诊断】
 一、病因
@@ -2329,7 +2329,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "牙结石",
     cond: () => true,
     symptoms: ["口臭", "牙龈出血", "牙松动"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    exclude: ["呕吐腹泻", "发热咳嗽"],
     duration: "2周以上",
     info: `【牙结石｜专业诊断】
 一、病因
@@ -2355,7 +2355,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "牙周炎",
     cond: () => true,
     symptoms: ["口臭", "牙龈出血", "牙松动"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    exclude: ["呕吐腹泻", "发热咳嗽"],
     duration: "2周以上",
     info: `【牙周炎｜专业诊断】
 一、病因
@@ -2381,7 +2381,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "牙龈炎",
     cond: () => true,
     symptoms: ["口臭", "牙龈出血", "牙松动"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    exclude: ["呕吐腹泻", "发热咳嗽"],
     duration: "2周以上",
     info: `【牙龈炎｜专业诊断】
 一、病因
@@ -2407,7 +2407,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "口腔溃疡",
     cond: () => true,
     symptoms: ["口腔疼痛", "流涎", "拒食", "口臭"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    exclude: ["呕吐腹泻", "高热", "咳嗽"],
     duration: "1-2周",
     info: `【口腔溃疡｜专业诊断】
 一、病因
@@ -2432,7 +2432,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "口臭",
     cond: () => true,
     symptoms: ["口腔异味", "流涎", "拒食"],
-    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    exclude: ["呕吐腹泻", "高热", "咳嗽"],
     duration: "2周以上",
     info: `【口臭｜专业诊断】
 一、病因
@@ -2458,7 +2458,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "子宫蓄脓",
     cond: () => isFemale && !isSterile,
     symptoms: ["腹部胀大", "生殖器流脓", "多饮多尿"],
-    excludeSymptoms: ["咳嗽流涕", "腹泻便血"],
+    exclude: ["咳嗽流涕", "腹泻便血"],
     duration: "2周以上",
     info: `【子宫蓄脓（母畜）｜专业诊断】
 一、病因
@@ -2487,7 +2487,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "乳腺炎",
     cond: () => isFemale && !isSterile,
     symptoms: ["乳房红肿痛", "泌乳异常"],
-    excludeSymptoms: ["呕吐腹泻", "咳嗽高热"],
+    exclude: ["呕吐腹泻", "咳嗽高热"],
     duration: "1-2周",
     info: `【乳腺炎｜专业诊断】
 一、病因
@@ -2512,7 +2512,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "关节问题",
     cond: () => true && (isOld || isFat),
     symptoms: ["跛行", "疼痛", "瘫痪", "起身困难"],
-    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    exclude: ["呕吐腹泻", "发热咳嗽"],
     duration: "2周以上",
     info: `【关节/椎间盘问题｜专业诊断】
 一、病因
@@ -2539,7 +2539,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "葱类中毒",
     cond: () => true,
     symptoms: ["溶血", "贫血", "血尿"],
-    excludeSymptoms: ["咳嗽流涕", "皮肤癣"],
+    exclude: ["咳嗽流涕", "皮肤癣"],
     duration: "1天内",
     info: `【葱类中毒｜专业诊断】
 一、病因
@@ -2565,7 +2565,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "老鼠药中毒",
     cond: () => true,
     symptoms: ["呕吐", "抽搐", "出血"],
-    excludeSymptoms: ["单纯咳嗽", "皮肤癣"],
+    exclude: ["单纯咳嗽", "皮肤癣"],
     duration: "1天内",
     info: `【老鼠药中毒｜专业诊断】
 一、病因
@@ -2592,7 +2592,7 @@ document.getElementById('makeR').addEventListener('click', function() {
     name: "呕吐胆汁/急性胃炎",
     cond: () => true,
     symptoms: ["呕吐胆汁", "吐黄沫", "吐黄水", "空腹呕吐"],
-    excludeSymptoms: ["抽搐", "流口水", "腹部胀大", "干呕"],
+    exclude: ["抽搐", "流口水", "腹部胀大", "干呕"],
     duration: "1天内",
     info: `【呕吐胆汁/急性胃炎（最常见）｜专业诊断】
 一、病因
@@ -2615,7 +2615,8 @@ document.getElementById('makeR').addEventListener('click', function() {
     danger: false,
     matchScore: 0
   },
-
+    
+// ========== 修复后的诊断逻辑部分 ==========
   // 诊断逻辑
   let matchedDiseases = [];
   rules.forEach(rule => {
@@ -2842,17 +2843,10 @@ function loadDisease(){
   })
 }
 
-
- document.getElementById('searchD').addEventListener('input', loadDisease);
-} // 这行是loadDisease函数的闭合
+document.getElementById('searchD').addEventListener('input', loadDisease);
+// 移除多余的闭合大括号
 
 // 搜索功能（删除重复的搜索事件绑定，保留上面的即可）
-// 切换疾病详情
-function toggleDisease(index) {
-  const el = document.getElementById(`d-${index}`);
-  el.style.display = el.style.display === 'block' ? 'none' : 'block';
-}
-
 // 切换疾病详情
 function toggleDisease(index) {
   const el = document.getElementById(`d-${index}`);
