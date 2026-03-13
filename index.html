@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>猫狗全科诊疗系统（豆包 AI版）</title>
+<title>猫狗全科诊疗系统</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial;}
@@ -65,7 +65,6 @@
   .login-item input{width:100%;padding:10px;border:1px solid #ffc4d8;border-radius:10px;background:#fff8fa;}
   .login-btn{width:100%;padding:12px;background:#e64980;color:#fff;border:none;border-radius:10px;margin-top:10px;font-size:15px;cursor:pointer;}
   .logout-btn{position:absolute;top:10px;right:10px;padding:6px 12px;background:#ff4444;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;}
-  .ai-loading{color:#e64980;font-size:13px;padding:6px 0;}
 </style>
 </head>
 <body>
@@ -88,13 +87,13 @@
 
   <div class="page" id="mainPage">
     <button class="logout-btn" id="logoutBtn">退出登录</button>
-    <div class="head"><h1>猫狗全科诊疗系统（豆包 AI版）</h1></div>
+    <div class="head"><h1>猫狗全科诊疗系统</h1></div>
     <div class="nav">
       <span class="on" data-p="1">档案室</span>
       <span data-p="2">档案编辑</span>
-      <span data-p="3">AI智能诊断</span>
+      <span data-p="3">症状诊断</span>
       <span data-p="4">诊疗记录</span>
-      <span data-p="5">AI疾病百科</span>
+      <span data-p="5">疾病百科</span>
       <span data-p="6">X光识别</span>
     </div>
 
@@ -133,8 +132,30 @@
       <div class="card" id="usePet"></div>
       <div class="tit">主人描述症状</div>
       <div class="item"><textarea id="sym" placeholder="请详细描述症状，例如：呕吐、拉稀、咳嗽、不吃饭、后腿瘫痪、腹水肚大..."></textarea></div>
-      <button class="btn" id="aiDiagnoseBtn">AI智能诊断</button>
-      <div class="ai-loading" id="aiLoading" style="display:none">AI正在思考诊断中，请稍候...</div>
+      <button class="btn" id="startQ">开始问诊</button>
+
+      <div class="qbox" id="qbox">
+        <div class="qitem">
+          <div class="q">病程时间（单选）</div>
+          <div class="opts" data-key="day">
+            <span>1天内</span><span>2-3天</span><span>4-7天</span><span>1-2周</span><span>2周以上</span>
+          </div>
+        </div>
+        <div class="qitem">
+          <div class="q">病况补充（可多选）</div>
+          <div class="opts" data-key="add">
+            <span>发烧</span><span>不吃饭</span><span>不喝水</span><span>嗜睡</span><span>腹痛弓背</span>
+            <span>发抖</span><span>口臭</span><span>眼屎多</span><span>流鼻涕</span><span>瘙痒</span>
+            <span>消瘦</span><span>腹水肚大</span><span>黄疸</span><span>尿频</span><span>尿血</span>
+            <span>尿不出</span><span>咳嗽</span><span>喘</span><span>跛行</span><span>掉毛</span>
+            <span>多饮多尿</span><span>呕吐</span><span>拉稀</span><span>便秘</span><span>流口水</span>
+            <span>牙龈出血</span><span>牙齿发黄</span><span>皮肤红疹</span><span>腹部胀大</span><span>抽搐</span>
+            <span>呕吐虫体</span><span>肛门瘙痒</span><span>呼吸急促</span><span>不吃不喝</span><span>精神萎靡</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" id="makeR" style="display:none;margin-top:10px">生成诊断报告</button>
       <div class="report" id="report"></div>
     </div>
 
@@ -148,14 +169,9 @@
     </div>
 
     <div class="sub-page" id="p5">
-      <div class="tit">AI疾病百科（豆包问答）</div>
-      <div class="item">
-        <label>请输入疾病问题（如：猫瘟怎么治、狗细小症状、胰腺炎护理）</label>
-        <textarea id="aiDiseaseQuery" rows="3" placeholder="例如：猫尿闭怎么处理？狗呕吐黄沫是什么病？"></textarea>
-      </div>
-      <button class="btn" id="aiDiseaseBtn">AI查询疾病知识</button>
-      <div class="ai-loading" id="aiDiseaseLoading" style="display:none">AI正在查询疾病知识...</div>
-      <div class="report" id="aiDiseaseResult" style="display:none;margin-top:12px"></div>
+      <div class="tit">猫狗全科疾病百科全书</div>
+      <input class="search" id="searchD" placeholder="搜索疾病：猫瘟、尿闭、细小、胰腺炎...">
+      <div class="d-list" id="dList"></div>
     </div>
 
     <div class="sub-page" id="p6">
@@ -173,14 +189,6 @@
 const USERS_KEY = "users";
 let currentUser = null;
 
-// 豆包 API 配置（修复版）
-const DEEPSEEK_CONFIG = {
-  apiKey: "513a8125-87ec-4538-87e4-265eed1255bb",
-  model: "doubao-pro", // 改用兼容更好的模型名
-  url: "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-};
-
-// 登录校验
 function checkLogin() {
   const savedUser = sessionStorage.getItem('currentUser');
   if (savedUser) {
@@ -201,16 +209,22 @@ function showMainPage() {
   document.getElementById('mainPage').classList.add('show');
   loadPetList();
   loadHis();
+  loadDisease();
 }
 
-// 登录注册
 document.getElementById('loginBtn').addEventListener('click', function() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
-  if (!username || !password) { alert('请输入用户名和密码'); return; }
+  if (!username || !password) {
+    alert('请输入用户名和密码');
+    return;
+  }
   const users = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
-  if (!users[username] || users[username].password !== password) { alert('用户名或密码错误'); return; }
-  currentUser = { username };
+  if (!users[username] || users[username].password !== password) {
+    alert('用户名或密码错误');
+    return;
+  }
+  currentUser = { username: username };
   sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
   sessionStorage.removeItem('usePet');
   showMainPage();
@@ -219,9 +233,15 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 document.getElementById('registerBtn').addEventListener('click', function() {
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
-  if (!username || !password) { alert('请输入用户名和密码'); return; }
+  if (!username || !password) {
+    alert('请输入用户名和密码');
+    return;
+  }
   const users = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
-  if (users[username]) { alert('用户名已存在'); return; }
+  if (users[username]) {
+    alert('用户名已存在');
+    return;
+  }
   users[username] = { password };
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   alert('注册成功，请登录');
@@ -236,7 +256,6 @@ document.getElementById('logoutBtn').addEventListener('click', function() {
   document.getElementById('password').value = '';
 });
 
-// 用户数据隔离
 function getStorageKey(baseKey) {
   if (!currentUser || !currentUser.username) return baseKey;
   return `${baseKey}_${currentUser.username}`;
@@ -244,7 +263,6 @@ function getStorageKey(baseKey) {
 const PETS = "pet_list_v2";
 const HIS = "pet_his_v2";
 
-// 导航
 document.querySelectorAll('.nav span').forEach(n=>{
   n.addEventListener('click', function() {
     document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('show'));
@@ -254,29 +272,50 @@ document.querySelectorAll('.nav span').forEach(n=>{
     if (targetPage) targetPage.classList.add('show');
     if(this.dataset.p==1) loadPetList();
     if(this.dataset.p==4) loadHis();
+    if(this.dataset.p==5) loadDisease();
   });
 })
 
-// 品种联动
 const breedData = {
-  狗: ["泰迪","贵宾","比熊","博美","吉娃娃","约克夏","巴哥","法斗","柯基","雪纳瑞","西施","马尔济斯","京巴","蝴蝶犬","柴犬","边牧","哈士奇","萨摩耶","松狮","秋田","英斗","喜乐蒂","银狐","金毛","拉布拉多","阿拉斯加","德牧","杜宾","罗威纳","藏獒","卡斯罗","高加索","马士提夫","圣伯纳","大丹","田园犬"],
-  猫: ["布偶","英短","美短","蓝猫","加菲","金渐层","银渐层","矮脚","缅因","暹罗","田园猫","橘猫","狸花猫","三花猫","金吉拉","波斯猫","德文卷毛","斯芬克斯"]
+  狗: [
+    "泰迪", "贵宾", "比熊", "博美", "吉娃娃", "约克夏", "巴哥", "法斗", "柯基", "雪纳瑞",
+    "西施", "马尔济斯", "京巴", "蝴蝶犬", "柴犬", "边牧", "哈士奇", "萨摩耶", "松狮",
+    "秋田", "英斗", "喜乐蒂", "银狐", "金毛", "拉布拉多", "阿拉斯加", "德牧", "杜宾",
+    "罗威纳", "藏獒", "卡斯罗", "高加索", "马士提夫", "圣伯纳", "大丹", "田园犬"
+  ],
+  猫: [
+    "布偶", "英短", "美短", "蓝猫", "加菲", "金渐层", "银渐层", "矮脚", "缅因", "暹罗",
+    "田园猫", "橘猫", "狸花猫", "三花猫", "金吉拉", "波斯猫", "德文卷毛", "斯芬克斯"
+  ]
 };
 
 const ptypeSelect = document.getElementById('ptype');
 const pbreedSelect = document.getElementById('pbreed');
 ptypeSelect.addEventListener('change', function() {
-  const t = this.value;
+  const selectedType = this.value;
   pbreedSelect.innerHTML = '';
-  if (!t) { pbreedSelect.innerHTML = '<option value="">请先选择宠物种类</option>'; return; }
-  breedData[t].forEach(b=>{
-    const opt = document.createElement('option');
-    opt.value = b; opt.textContent = b;
-    pbreedSelect.appendChild(opt);
+
+  if (!selectedType) {
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = '请先选择宠物种类';
+    pbreedSelect.appendChild(emptyOption);
+    return;
+  }
+
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = `请选择${selectedType}品种`;
+  pbreedSelect.appendChild(defaultOption);
+
+  breedData[selectedType].forEach(breed => {
+    const option = document.createElement('option');
+    option.value = breed;
+    option.textContent = breed;
+    pbreedSelect.appendChild(option);
   });
 });
 
-// 宠物档案
 function loadPetList(){
   let list = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]");
   let box = document.getElementById('petList');
@@ -290,33 +329,23 @@ function loadPetList(){
     </div>
   `).join('');
   box.querySelectorAll('.del').forEach(d=>{
-    d.onclick=(e)=>{ e.stopPropagation(); if(!confirm("删除该宠物？"))return;
+    d.onclick=(e)=>{
+      e.stopPropagation();
+      if(!confirm("删除该宠物？"))return;
       let arr = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]");
       arr = arr.filter(x=>x.id!=d.dataset.id);
       localStorage.setItem(getStorageKey(PETS), JSON.stringify(arr));
       loadPetList();
     }
-  });
+  })
   box.querySelectorAll('.pet-card').forEach(c=>{
     c.onclick=()=>{
       let id = c.querySelector('.del').dataset.id;
       let p = JSON.parse(localStorage.getItem(getStorageKey(PETS))||"[]").find(x=>x.id==id);
       sessionStorage.setItem('usePet', JSON.stringify(p));
       document.querySelector('[data-p="3"]').click();
-      showUsePet();
     }
-  });
-}
-
-function showUsePet(){
-  let p = sessionStorage.getItem('usePet');
-  if(!p){document.getElementById('usePet').innerHTML="<b>请先在档案室选择宠物</b>";return;}
-  p = JSON.parse(p);
-  document.getElementById('usePet').innerHTML = `
-<b>当前：${p.name}（${p.type}）</b><br>
-品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg｜性别：${p.gender}｜绝育：${p.sterile}<br>
-疫苗：${p.vac1}｜狂犬：${p.vac2}｜体内：${p.de1}｜体外：${p.de2}
-  `;
+  })
 }
 
 document.getElementById('newPet').addEventListener('click', function() {
@@ -347,7 +376,11 @@ document.getElementById('savePet').addEventListener('click', async function() {
   let name = document.getElementById('pname').value;
   let type = ptypeSelect.value;
   let breed = pbreedSelect.value;
-  if(!name||!type||!breed){alert("请完善宠物信息");return;}
+  
+  if(!name){alert("请填写宠物名");return;}
+  if(!type){alert("请选择宠物种类");return;}
+  if(!breed){alert("请选择宠物品种");return;}
+  
   let file = document.getElementById('avatar').files[0];
   let avatar = "";
   if(file){
@@ -355,10 +388,12 @@ document.getElementById('savePet').addEventListener('click', async function() {
       let fr = new FileReader();
       fr.onload=()=>r(fr.result);
       fr.readAsDataURL(file);
-    });
+    })
   }
   let item = {
-    id, owner:document.getElementById('owner').value, name, type, breed,
+    id, owner:document.getElementById('owner').value, name,
+    type: type,
+    breed: breed,
     age:document.getElementById('page').value,
     weight:document.getElementById('pweight').value,
     gender:document.getElementById('pgender').value,
@@ -373,222 +408,2493 @@ document.getElementById('savePet').addEventListener('click', async function() {
   let idx = list.findIndex(x=>x.id==id);
   if(idx>-1) list[idx]=item; else list.unshift(item);
   localStorage.setItem(getStorageKey(PETS), JSON.stringify(list));
-  alert("保存成功！");
+  alert("保存成功！返回档案室选择宠物。");
   document.querySelector('[data-p="1"]').click();
 });
 
-// =============================================
-// 豆包 AI 智能诊断（修复核心）
-// =============================================
-document.getElementById('aiDiagnoseBtn').addEventListener('click', async function() {
-  const petStr = sessionStorage.getItem('usePet');
-  if (!petStr) { alert("请先在档案室选择宠物"); return; }
-  const pet = JSON.parse(petStr);
-  const sym = document.getElementById('sym').value.trim();
-  if (!sym) { alert("请输入症状描述"); return; }
+function showUsePet(){
+  let p = sessionStorage.getItem('usePet');
+  if(!p){document.getElementById('usePet').innerHTML="<b>请先在档案室选择宠物</b>";return;}
+  p = JSON.parse(p);
+  document.getElementById('usePet').innerHTML = `
+<b>当前：${p.name}（${p.type}）</b><br>
+品种：${p.breed}｜年龄：${p.age}｜体重：${p.weight}kg｜性别：${p.gender}｜绝育：${p.sterile}<br>
+疫苗：${p.vac1}｜狂犬：${p.vac2}｜体内：${p.de1}｜体外：${p.de2}
+  `;
+}
 
-  const loading = document.getElementById('aiLoading');
-  const report = document.getElementById('report');
-  loading.style.display = "block";
-  report.style.display = "none";
-
-  try {
-    const prompt = `你是专业执业兽医，根据以下宠物信息和症状，给出专业诊断、病因、建议治疗方案、护理注意事项，语言通俗严谨，分点说明。
-宠物信息：
-种类：${pet.type}，品种：${pet.breed}，年龄：${pet.age}，体重：${pet.weight}kg，性别：${pet.gender}，绝育：${pet.sterile}
-疫苗：${pet.vac1}，狂犬：${pet.vac2}，体内驱虫：${pet.de1}，体外驱虫：${pet.de2}
-主人描述症状：${sym}
-请给出：1.可能疾病 2.紧急程度 3.家庭处理 4.就医建议 5.注意事项`;
-
-    // 发送请求（新增详细配置+错误校验）
-    const res = await fetch(DEEPSEEK_CONFIG.url, {
-      method: "POST",
-      mode: "cors", // 显式声明跨域
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${DEEPSEEK_CONFIG.apiKey}`
-      },
-      body: JSON.stringify({
-        model: DEEPSEEK_CONFIG.model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-        max_tokens: 1500,
-        stream: false // 关闭流式返回
-      })
+let sel = {};
+document.querySelectorAll('.opts').forEach(g=>{
+  g.querySelectorAll('span').forEach(s=>{
+    s.addEventListener('click', function() {
+      if(g.dataset.key === "day"){
+        g.querySelectorAll('span').forEach(x=>x.classList.remove('sel'));
+        this.classList.add('sel');
+        sel[g.dataset.key] = new Set([this.innerText]);
+      } else {
+        this.classList.toggle('sel');
+        let k = g.dataset.key;
+        if(!sel[k]) sel[k]=new Set();
+        sel[k].has(this.innerText) ? sel[k].delete(this.innerText) : sel[k].add(this.innerText);
+      }
     });
+  });
+})
 
-    // 新增：校验HTTP响应状态
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ message: "未知错误" }));
-      throw new Error(`API返回错误 [${res.status}]：${errorData.error?.message || errorData.message}`);
+document.getElementById('startQ').addEventListener('click', function() {
+  if(!sessionStorage.getItem('usePet')){alert("请先选宠物");return;}
+  if(!document.getElementById('sym').value){alert("请输入症状");return;}
+  document.getElementById('qbox').style.display='block';
+  document.getElementById('makeR').style.display='block';
+  showUsePet();
+});
+
+function synonymText(text){
+  let t = text.toLowerCase().trim();
+  t = t.replace(/(\w+)\\1+/g, '$1');
+  
+  const map = {
+    "吐":"呕吐","呕":"呕吐","反胃":"呕吐","吐虫子":"呕吐虫体","吐虫":"呕吐虫体",
+    "拉肚子":"拉稀","腹泻":"拉稀","拉肚":"拉稀","软便":"拉稀","水样便":"拉稀",
+    "没精神":"精神萎靡","精神差":"精神萎靡","蔫":"精神萎靡","不振":"精神萎靡",
+    "不吃东西":"不吃饭","拒食":"不吃饭","不进食":"不吃饭","绝食":"不吃饭",
+    "不吃不喝":"不吃饭 不喝水",
+    "肚子胀":"腹部胀大","腹胀":"腹部胀大","肚大":"腹部胀大","腹水":"腹水肚大",
+    "喘不上气":"呼吸急促","气短":"呼吸急促","呼吸困难":"呼吸急促","腹式呼吸":"呼吸急促",
+    "蹲盆频繁":"尿频","尿多":"尿频","频繁排尿":"尿频",
+    "不拉":"便秘","不排便":"便秘","大便干":"便秘",
+    "流哈喇子":"流口水","口水多":"流口水","口涎":"流口水",
+    "发烧":"高烧","发热":"高烧","体温高":"高烧",
+    "肚子疼":"腹痛弓背","弓背":"腹痛弓背","腹疼":"腹痛弓背",
+    "掉毛多":"掉毛","脱毛":"掉毛",
+    "皮肤痒":"瘙痒","抓挠":"瘙痒","挠痒":"瘙痒",
+    "瘦":"消瘦","体重降":"消瘦","掉秤":"消瘦",
+    "尿血":"血尿","尿里有血":"血尿",
+    "尿不出来":"尿不出","尿闭":"尿不出","排不出尿":"尿不出",
+    "咳嗽":"咳","干咳":"咳嗽","湿咳":"咳嗽","咳嗦":"咳嗽",
+    "喘":"气喘","喘息":"喘","气短":"喘",
+    "瘸":"跛行","瘸腿":"跛行","走路一瘸一拐":"跛行","不敢着地":"跛行",
+    "口臭":"口气重","嘴臭":"口臭",
+    "眼屎多":"眼分泌物多","眼垢多":"眼屎多","流泪":"眼屎多",
+    "流鼻涕":"鼻水多","流鼻水":"流鼻涕","打喷嚏":"流鼻涕",
+    "多喝":"多饮多尿","多尿":"多饮多尿","喝水多":"多饮多尿","尿多":"多饮多尿",
+    "抽搐":"抽风","抽":"抽搐","发抖":"抽搐","痉挛":"抽搐",
+    "肛门痒":"肛门瘙痒","蹭屁股":"肛门瘙痒","舔肛门":"肛门瘙痒",
+    "牙龈出血":"牙床出血","流牙血":"牙龈出血",
+    "牙齿黄":"牙齿发黄","牙黄":"牙齿发黄",
+    "红疹":"皮肤红疹","疙瘩":"皮肤红疹","红斑":"皮肤红疹",
+    "黄疸":"皮肤黄","眼白黄":"黄疸","尿黄":"黄疸",
+    "发抖":"颤抖","哆嗦":"发抖","颤":"发抖",
+    "牙":"牙齿 口腔","牙齿":"牙 口腔","口腔":"牙 口腔",
+    "牙黄":"牙齿发黄","牙疼":"牙齿疼痛 口腔不适","牙垢":"牙结石","牙结石":"牙垢",
+    "牙周炎":"牙龈炎 牙龈出血","牙龈炎":"牙周炎 牙龈出血",
+    "牙出血":"牙龈出血","牙龈肿":"牙龈出血 牙周炎",
+    "口炎":"口腔炎症 口腔溃疡","口腔溃疡":"口炎 口腔炎症",
+    "吐黄沫":"呕吐胆汁 胃炎 肠胃刺激","吐黄水":"呕吐胆汁 胃炎 肠胃刺激",
+    "黄沫":"呕吐胆汁","黄水":"呕吐胆汁"
+  };
+  
+  Object.keys(map).forEach(k=>{
+    const regex = new RegExp(`\\b${k}\\b`, 'g');
+    t = t.replace(regex, map[k]);
+  });
+  
+  t = t.replace(/\s+/g, ' ').trim();
+  return t;
+}
+
+function getDurationWeight(dayText, diseaseDuration) {
+  const durationMap = {
+    "1天内": 1,
+    "2-3天": 3,
+    "4-7天": 7,
+    "1-2周": 14,
+    "2周以上": 30
+  };
+  
+  const inputDays = durationMap[dayText] || 0;
+  const diseaseDays = durationMap[diseaseDuration] || 0;
+  
+  if (inputDays === diseaseDays) return 3;
+  const dayValues = [1,3,7,14,30];
+  const inputIndex = dayValues.indexOf(inputDays);
+  const diseaseIndex = dayValues.indexOf(diseaseDays);
+  
+  if (Math.abs(inputIndex - diseaseIndex) === 1) return 2;
+  return 1;
+}
+
+document.getElementById('makeR').addEventListener('click', function() {
+  let pet = JSON.parse(sessionStorage.getItem('usePet'));
+  let originalSym = document.getElementById('sym').value.trim();
+  let sym = synonymText(originalSym);
+  let day = Array.from(sel.day||[])[0] || "未选择";
+  let addArr = Array.from(sel.add||[]);
+  let addText = addArr.join(' ');
+  let add = synonymText(addText);
+  
+  let allSymptoms = `${sym} ${add}`;
+
+  const isDog = pet.type === "狗";
+  const isCat = pet.type === "猫";
+  const isMale = pet.gender === "公";
+  const isFemale = pet.gender === "母";
+  const isSterile = pet.sterile === "已绝育";
+  const isUnvaccinated = pet.vac1 === "未接种" || pet.vac1 === "1针" || pet.vac1 === "2针";
+
+  let ageNum = parseFloat(pet.age) || 0;
+  let weightNum = parseFloat(pet.weight) || 0;
+  let breed = (pet.breed || "").trim();
+
+  let dogSize = "small";
+  let catStandardWeight = 4.5;
+
+  const smallDog = [
+    "泰迪","贵宾","比熊","博美","吉娃娃","约克夏","巴哥","法斗","柯基","雪纳瑞","西施","马尔济斯","京巴","蝴蝶犬"
+  ];
+  const middleDog = [
+    "柴犬","边牧","哈士奇","萨摩耶","松狮","秋田","斗牛","英斗","喜乐蒂","银狐"
+  ];
+  const largeDog = [
+    "金毛","拉布拉多","阿拉斯加","德牧","杜宾","罗威纳","藏獒","卡斯罗","高加索","马士提夫","圣伯纳","大丹"
+  ];
+
+  if (isDog) {
+    if (smallDog.some(s => breed.includes(s))) dogSize = "small";
+    else if (middleDog.some(s => breed.includes(s))) dogSize = "middle";
+    else if (largeDog.some(s => breed.includes(s))) dogSize = "large";
+  }
+
+  const catWeightMap = {
+    "布偶": 7,
+    "英短": 5.5,
+    "美短": 5.2,
+    "蓝猫": 5.5,
+    "加菲": 6,
+    "金渐层": 5.8,
+    "银渐层": 5.2,
+    "矮脚": 5,
+    "缅因": 9,
+    "暹罗": 4.2,
+    "田园": 4.5,
+    "橘猫":4.8,
+    "狸花猫":4.6,
+    "三花猫":4.3,
+    "金吉拉":5.0,
+    "波斯猫":5.8,
+    "德文卷毛":4.0,
+    "斯芬克斯":4.5
+  };
+  for (let key in catWeightMap) {
+    if (breed.includes(key)) {
+      catStandardWeight = catWeightMap[key];
+      break;
     }
+  }
 
-    const data = await res.json();
-    const aiText = data.choices?.[0]?.message?.content || "未获取到诊断结果";
+  let isFat = false;
+  let isOld = ageNum >= 8;
 
-    const fullReport = `【${pet.name}｜豆包 AI 智能诊断】
+  if (isDog) {
+    if (dogSize === "small") isFat = weightNum > 8;
+    else if (dogSize === "middle") isFat = weightNum > 18;
+    else if (dogSize === "large") isFat = weightNum > 32;
+  }
+  if (isCat) {
+    isFat = weightNum > catStandardWeight * 1.2;
+  }
+
+  let r = `【${pet.name}｜${pet.type}｜诊断报告】
 ——————————————
-档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜${pet.gender}｜${pet.sterile}
+档案：${pet.breed} ${pet.age}岁 ${pet.weight}kg｜性别：${pet.gender}｜绝育：${pet.sterile}
 疫苗：${pet.vac1} 狂犬：${pet.vac2}
 驱虫：体内${pet.de1} 体外${pet.de2}
-症状：${sym}
+主诉：${originalSym}
+病程：${day}
+补充：${addText || "无补充"}
 ——————————————
-${aiText}
+`;
 
-——————————————
-⚠️ 本报告由豆包 AI 生成，仅供参考，重症请立即就医`;
-
-    report.innerText = fullReport;
-    report.style.display = "block";
-
-    // 保存记录
-    let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
-    hs.unshift({
-      id: Date.now(),
-      name: pet.name,
-      type: pet.type,
-      t: new Date().toLocaleString(),
-      text: fullReport
-    });
-    if (hs.length > 60) hs.pop();
-    localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
-
-  } catch (e) {
-    // 显示详细错误信息（方便排查）
-    report.innerText = `AI请求失败：
-1. 错误原因：${e.message}
-2. 排查建议：
-   - 请用本地服务器访问（python -m http.server 8080）
-   - 检查API Key是否正确：513a8125-87ec-4538-87e4-265eed1255bb
-   - 打开浏览器F12控制台查看详细报错`;
-    report.style.display = "block";
-    console.error("完整错误日志：", e); // 控制台打印详细日志
-  } finally {
-    loading.style.display = "none";
+  if (isFat) {
+    r += `⚠️体型提醒：宠物体重超标，易患肥胖、关节病、心脏病、糖尿病、胰腺炎。\n`;
   }
-});
+  if (isOld) {
+    r += `⚠️年龄提醒：已进入老年期，体质较弱，**非危及生命不建议麻醉与手术**。\n`;
+  }
+  if (isFat || isOld) r += "\n";
 
-// =============================================
-// 豆包 AI 疾病百科问答（同步修复）
-// =============================================
-document.getElementById('aiDiseaseBtn').addEventListener('click', async function() {
-  const q = document.getElementById('aiDiseaseQuery').value.trim();
-  if (!q) { alert("请输入疾病问题"); return; }
+  let hasDanger = false;
+  let hasDiagnosis = false;
+  
+  const rules = [
+    {
+      name:"猫瘟",
+      cond:()=>isCat && isUnvaccinated,
+      symptoms:["高烧","呕吐","便血","白细胞减少","脱水"],
+      exclude:["单纯咳嗽","皮肤癣斑","关节疼痛"],
+      duration:"1-2周",
+      info:`【猫瘟｜兽医专业诊断】
+一、病因
+• 猫泛白细胞减少症病毒（FPV）感染，高度接触性烈性传染病
+• 未免疫/免疫不全幼猫最易感，可通过粪口、分泌物、环境传播
 
-  const loading = document.getElementById('aiDiseaseLoading');
-  const result = document.getElementById('aiDiseaseResult');
-  loading.style.display = "block";
-  result.style.display = "none";
+二、核心症状
+• 突发高热（39.5-41℃）、剧烈呕吐、血水样腹泻、严重脱水
+• 精神高度沉郁、拒食、白细胞急剧下降
+• 典型病程：急进性加重，2-3天可危及生命
 
-  try {
-    const prompt = `你是猫狗全科兽医专家，回答以下宠物疾病问题，要求专业、清晰、易懂，分点说明：
-问题：${q}
-请包含：定义、症状、原因、处理、预防`;
+三、排除症状
+• 无明显呼吸道症状（咳嗽、流涕轻或无）
+• 无皮肤癣斑、无单纯关节疼痛
 
-    const res = await fetch(DEEPSEEK_CONFIG.url, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${DEEPSEEK_CONFIG.apiKey}`
-      },
-      body: JSON.stringify({
-        model: DEEPSEEK_CONFIG.model,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
-        max_tokens: 1200,
-        stream: false
-      })
+四、治疗方案
+• 紧急住院：强力补液、纠正电解质与酸中毒
+• 抗病毒：猫瘟单抗、干扰素
+• 对症：止吐、止血、广谱抗生素防继发感染
+• 营养支持：强制饲喂、补血保肝
+
+五、护理要点
+• 严格隔离，环境彻底消毒
+• 保温、禁食禁水由兽医评估
+• 治愈后仍排毒2周，需与健康猫隔离至少30天`,
+      danger:true
+    },
+    {
+      name:"猫鼻支",
+      cond:()=>isCat,
+      symptoms:["流鼻涕","眼屎多","咳嗽","发烧","喷嚏","流泪"],
+      exclude:["剧烈呕吐血便","腹水","神经抽搐"],
+      duration:"2周以上",
+      info:`【猫鼻支｜兽医专业诊断】
+一、病因
+• 猫疱疹病毒1型（FHV-1）感染，上呼吸道高度传染性疾病
+• 应激、密集饲养、幼猫高发
+
+二、核心症状
+• 频繁喷嚏、浆液性→脓性鼻分泌物
+• 双侧眼结膜炎、大量眼屎、流泪、畏光
+• 发热、精神食欲下降，严重出现口腔溃疡
+
+三、排除症状
+• 无严重消化道出血、无腹水、无抽搐
+
+四、治疗方案
+• 抗病毒：泛昔洛韦口服
+• 眼部：抗病毒滴眼液+抗生素滴眼液
+• 对症：止咳、化痰、营养支持（赖氨酸辅助）
+
+五、护理要点
+• 清理眼鼻分泌物，保持呼吸道通畅
+• 提高环境湿度，温食诱食
+• 终身带毒，应激易复发`,
+      danger:false
+    },
+    {
+      name:"猫杯状病毒",
+      cond:()=>isCat,
+      symptoms:["口炎","流口水","喷嚏","跛行","发烧"],
+      exclude:["血便","腹水","尿闭","严重呕吐"],
+      duration:"1-2周",
+      info:`【猫杯状病毒｜兽医专业诊断】
+一、病因
+• 猫杯状病毒（FCV）感染，高度传染性上呼吸道/口腔疾病
+• 变异株多，部分强毒型可致严重全身症状
+
+二、核心症状
+• 舌/口腔水疱溃疡、剧痛流涎、拒食
+• 喷嚏、流涕、发热
+• 部分毒株致多关节炎→突然跛行、疼痛
+
+三、排除症状
+• 无严重血便、无典型腹水、无尿闭
+
+四、治疗方案
+• 止痛、口腔清洁护理
+• 抗病毒、抗炎
+• 重症支持：强制喂食、补液
+
+五、护理要点
+• 软食/流食，避免刺激口腔
+• 环境消毒，隔离病猫
+• 终身带毒，定期免疫`,
+      danger:false
+    },
+    {
+      name:"猫传腹(FIP)",
+      cond:()=>isCat,
+      symptoms:["腹水肚大","发烧","消瘦","黄疸","贫血"],
+      exclude:["单纯咳嗽","腹泻","皮肤问题"],
+      duration:"2周以上",
+      info:`【猫传腹(FIP)｜兽医专业诊断】
+一、病因
+• 猫冠状病毒弱毒株突变→强毒，激发全身免疫性血管炎
+• 2岁内幼猫、应激、多猫家庭高发
+
+二、核心症状
+• 持续发热不退、精神食欲差、进行性消瘦
+• 湿性：腹水/胸水→腹大、呼吸困难
+• 干性：葡萄膜炎、神经症状、黄疸、贫血
+
+三、排除症状
+• 非普通肠胃炎腹泻、非单纯皮肤病
+
+四、治疗方案
+• 靶向抗病毒药（GS-441524等）规范疗程
+• 保肝、抗炎、营养支持、胸腹水穿刺
+
+五、护理要点
+• 严格减少应激，高蛋白易消化饮食
+• 按疗程服药，定期复查指标
+• 预后取决于就诊时机与并发症`,
+      danger:true
+    },
+    {
+      name:"猫白血病(FeLV)",
+      cond:()=>isCat,
+      symptoms:["贫血","消瘦","发烧","精神萎靡"],
+      exclude:["急性呕吐血便","尿闭","外伤疼痛"],
+      duration:"2周以上",
+      info:`【猫白血病(FeLV)｜兽医专业诊断】
+一、病因
+• 猫白血病逆转录病毒感染，免疫抑制+肿瘤风险高
+• 唾液、分泌物密切接触传播
+
+二、核心症状
+• 慢性消瘦、反复发热、精神沉郁
+• 贫血、黏膜苍白、免疫低下反复感染
+• 后期易出现淋巴瘤等肿瘤
+
+三、排除症状
+• 无急性消化道大出血、无尿闭急症
+
+四、治疗方案
+• 确诊：抗原/核酸检测
+• 对症：抗感染、补血、增强免疫
+• 肿瘤病例按化疗方案
+
+五、护理要点
+• 单猫饲养，绝对隔离
+• 定期体检，早发现并发症
+• 终身管理，无法根治`,
+      danger:true
+    },
+    {
+      name:"猫艾滋(FIV)",
+      cond:()=>isCat,
+      symptoms:["口炎","消瘦","精神萎靡","反复感染"],
+      exclude:["急性腹泻","腹水","高热惊厥"],
+      duration:"2周以上",
+      info:`【猫艾滋(FIV)｜兽医专业诊断】
+一、病因
+• 猫免疫缺陷病毒感染，渐进性免疫崩溃
+• 咬伤打架传播为主
+
+二、核心症状
+• 慢性严重口炎、牙龈炎、剧痛拒食流涎
+• 长期反复皮肤/呼吸道/眼部感染
+• 消瘦、慢性发热、淋巴结肿大
+
+三、排除症状
+• 无急性腹泻、无典型腹水、无高热惊厥
+
+四、治疗方案
+• 口腔护理、抗炎止痛
+• 控制继发感染、免疫调节
+• 口炎严重可考虑部分拔牙
+
+五、护理要点
+• 单猫隔离饲养
+• 定期口腔护理，低应激
+• 可存活多年，重在长期管理`,
+      danger:true
+    },
+    {
+      name:"猫哮喘",
+      cond:()=>isCat,
+      symptoms:["喘","咳嗽","呼吸急促","腹式呼吸"],
+      exclude:["呕吐腹泻","血便","尿闭","黄疸"],
+      duration:"2周以上",
+      info:`【猫哮喘｜兽医专业诊断】
+一、病因
+• 气道过敏性慢性炎症，粉尘、烟雾、应激诱发
+• 中年猫高发，反复发作
+
+二、核心症状
+• 阵发性咳喘、喘鸣、呼吸急促
+• 腹式呼吸、张口喘（重症）
+• 缓解期可基本正常
+
+三、排除症状
+• 无明显呕吐腹泻、无血便尿闭
+
+四、治疗方案
+• 糖皮质激素抗炎
+• 支气管扩张剂
+• 雾化吸入，减少全身副作用
+
+五、护理要点
+• 去除诱因：无尘砂、禁烟、减少刺激
+• 控制体重，避免剧烈运动
+• 常备应急药物`,
+      danger:false
+    },
+    {
+      name:"猫特发性口炎",
+      cond:()=>isCat,
+      symptoms:["口炎","流口水","拒食","口臭"],
+      exclude:["呕吐腹泻","咳嗽","尿闭","神经症状"],
+      duration:"2周以上",
+      info:`【猫特发性口炎｜兽医专业诊断】
+一、病因
+• 免疫介导性口腔严重炎症，病因复杂（病毒、免疫紊乱）
+• 极度疼痛，慢性反复发作
+
+二、核心症状
+• 全口牙龈/口腔黏膜弥漫红肿糜烂
+• 剧烈疼痛、流涎、口臭、拒食、惨叫
+• 体重快速下降
+
+三、排除症状
+• 无明显呕吐腹泻、无咳嗽、无尿闭
+
+四、治疗方案
+• 抗炎止痛、免疫调节
+• 部分/全口拔牙为有效方案
+• 口腔护理、长期管理
+
+五、护理要点
+• 流食软食，避免刺激
+• 定期口腔清洁
+• 长期用药，定期复查`,
+      danger:false
+    },
+    {
+      name:"猫脂肪肝",
+      cond:()=>isCat,
+      symptoms:["不吃饭","黄疸","呕吐","消瘦"],
+      exclude:["咳嗽","皮肤癣","血尿","关节痛"],
+      duration:"1-2周",
+      info:`【猫脂肪肝｜兽医专业诊断】
+一、病因
+• 长期拒食→脂肪快速动员→肝细胞脂肪沉积
+• 肥胖猫、应激绝食最危险
+
+二、核心症状
+• 突然完全拒食>48小时
+• 黄疸（皮肤/耳/眼白发黄）
+• 呕吐、消瘦、精神沉郁
+
+三、排除症状
+• 无明显咳嗽、无皮肤癣、无关节痛
+
+四、治疗方案
+• 强制喂食（鼻饲/食管饲）为核心
+• 保肝、利胆、止吐、补液
+• 纠正电解质紊乱
+
+五、护理要点
+• 绝对不能让猫长期不进食
+• 少量多餐，高适口食物
+• 疗程数周，需坚持饲喂`,
+      danger:true
+    },
+    {
+      name:"猫肥厚性心肌病",
+      cond:()=>isCat,
+      symptoms:["呼吸急促","喘","运动不耐"],
+      exclude:["呕吐腹泻","皮肤感染","发热"],
+      duration:"2周以上",
+      info:`【猫肥厚性心肌病｜兽医专业诊断】
+一、病因
+• 心肌异常肥厚，心腔变小，心功能下降
+• 公猫、中年以上高发，遗传相关
+
+二、核心症状
+• 呼吸急促、喘息、运动不耐
+• 夜间加重，突然虚脱、猝死
+• 后期可并发血栓、胸水
+
+三、排除症状
+• 无明显呕吐腹泻、无皮肤感染发热
+
+四、治疗方案
+• 心超确诊
+• 控制心率、降低应激
+• 预防血栓药物
+
+五、护理要点
+• 极低应激环境
+• 避免剧烈运动、惊吓
+• 定期心超复查`,
+      danger:true
+    },
+    {
+      name:"猫动脉血栓",
+      cond:()=>isCat,
+      symptoms:["后腿瘫痪","疼痛","爪垫冰冷"],
+      exclude:["腹泻","咳嗽","皮肤问题","发热"],
+      duration:"1天内",
+      info:`【猫动脉血栓｜兽医专业诊断】
+一、病因
+• 心脏病基础上形成血栓→堵塞髂动脉
+• 典型“马鞍栓”，后肢瘫痪
+
+二、核心症状
+• 突然后肢瘫痪、无法站立、剧烈疼痛叫
+• 后肢冰冷、爪垫发紫、无脉搏
+• 呼吸急促、高度应激
+
+三、排除症状
+• 无腹泻咳嗽、无皮肤问题发热
+
+四、治疗方案
+• 急诊：止痛、抗凝、改善循环
+• 治疗原发病（心脏病）
+• 支持护理
+
+五、护理要点
+• 立即就医，延误致残致死率高
+• 长期抗凝预防再栓
+• 严格心脏管理`,
+      danger:true
+    },
+    {
+      name:"公猫尿闭",
+      cond:()=>isCat && isMale && !isSterile,
+      symptoms:["尿频","尿不出","惨叫","呕吐","腹胀"],
+      exclude:["腹泻血便","咳嗽","皮肤癣斑"],
+      duration:"1天内",
+      info:`【公猫尿闭｜兽医专业诊断】
+一、病因
+• 尿道堵塞（结晶、栓子、痉挛、炎症）
+• 肥胖、应激、少喝水、干粮为主高发
+
+二、核心症状
+• 频繁蹲猫砂盆、无尿/滴尿、痛苦惨叫
+• 腹部紧绷疼痛、呕吐、精神沉郁
+• 24小时不解除可急性肾衰、死亡
+
+三、排除症状
+• 无腹泻血便、无咳嗽、无皮肤癣
+
+四、治疗方案
+• 急诊导尿、住院输液
+• 溶解结晶、抗炎解痉
+• 必要时留置尿管
+
+五、护理要点
+• 增加饮水、湿粮为主
+• 减重、减压、多猫多砂盆
+• 复发率高，需长期管理`,
+      danger:true
+    },
+    {
+      name:"猫百合中毒",
+      cond:()=>isCat,
+      symptoms:["呕吐","多饮多尿","精神萎靡"],
+      exclude:["咳嗽","皮肤问题","腹泻","关节痛"],
+      duration:"1天内",
+      info:`【猫百合中毒｜兽医专业诊断】
+一、病因
+• 百合全株剧毒，猫摄入极少量即可急性肾衰
+• 花粉、水、接触均可能中毒
+
+二、核心症状
+• 短时间内呕吐、精神沉郁
+• 后期少尿无尿、肾衰
+• 无发热，无明显腹泻
+
+三、排除症状
+• 无咳嗽、无皮肤关节问题
+
+四、治疗方案
+• 立即催吐、活性炭
+• 强力输液透析，保护肾功能
+• 对症支持
+
+五、护理要点
+• 猫环境绝对禁止百合
+• 接触后立即清洗
+• 越早治疗预后越好`,
+      danger:true
+    },
+   
+   const diseases = [
+  // ========== 狗专属疾病 ==========
+  {
+    name: "犬细小",
+    cond: () => isDog && isUnvaccinated,
+    symptoms: ["高烧", "呕吐", "便血", "腥臭", "脱水"],
+    excludeSymptoms: ["单纯咳嗽", "皮肤癣", "关节疼痛"],
+    duration: "1-2周",
+    info: `【犬细小病毒｜专业诊断】
+一、病因
+• 由犬细小病毒（CPV）引起的急性烈性肠道传染病
+• 未接种疫苗的幼犬最易感，通过粪口途径传播
+• 病毒快速破坏肠道黏膜，导致出血性肠炎
+
+二、核心症状
+• 突发剧烈呕吐、频繁腹泻
+• 典型番茄汁样血便，带有强烈腥臭味
+• 迅速脱水、精神极度沉郁、体温升高
+• 白细胞急剧下降，免疫力崩溃
+
+三、排除症状
+• 无明显呼吸道症状（咳嗽、流涕不典型）
+• 无皮肤病变、无关节疼痛
+
+四、治疗方案
+• 立即住院，严格禁水禁食，减轻肠道负担
+• 强力补液，纠正脱水、电解质紊乱与酸中毒
+• 使用抗病毒药物、止血、止吐、广谱抗生素
+• 必要时输血、血浆支持
+
+五、护理要点
+• 严格隔离，环境用含氯消毒剂彻底消毒
+• 注意保温，避免受凉应激
+• 恢复期少量多餐，给予易消化食物
+• 未免疫犬严禁外出接触`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "犬瘟热",
+    cond: () => isDog && isUnvaccinated,
+    symptoms: ["高烧", "眼屎多", "咳嗽", "抽搐", "脚垫硬"],
+    excludeSymptoms: ["牙齿", "牙黄", "牙疼", "口腔"],
+    duration: "2周以上",
+    info: `【犬瘟热｜专业诊断】
+一、病因
+• 犬瘟热病毒（CDV）引起的高度接触性传染病
+• 未免疫幼犬多发，通过呼吸道飞沫、分泌物传播
+• 病毒侵袭呼吸、消化、神经、皮肤多系统
+
+二、核心症状
+• 双相热：先高烧→短暂好转→再次持续高热
+• 脓性眼屎、鼻分泌物增多、咳嗽、呼吸困难
+• 呕吐、腹泻、食欲废绝
+• 鼻镜与脚垫角质增厚、干裂
+• 后期出现肌肉震颤、抽搐、癫痫样神经症状
+
+三、排除症状
+• 不直接引起牙疼、牙黄、口腔炎症
+• 无典型皮肤癣斑、无关节肿痛
+
+四、治疗方案
+• 住院隔离，使用犬瘟单抗、干扰素抗病毒
+• 补液、止咳、止吐、控制继发细菌感染
+• 神经症状给予抗惊厥、营养神经治疗
+• 加强营养支持，提高抵抗力
+
+五、护理要点
+• 彻底消毒环境，避免交叉感染
+• 及时清理眼鼻分泌物
+• 神经症状发作时做好防护，防止外伤
+• 本病死亡率高，有神经症状预后极差`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "犬窝咳",
+    cond: () => isDog,
+    symptoms: ["咳嗽", "干呕", "精神尚可"],
+    excludeSymptoms: ["呕吐血便", "黄疸", "尿闭", "神经症状"],
+    duration: "4-7天",
+    info: `【犬窝咳｜专业诊断】
+一、病因
+• 支气管败血波氏杆菌、病毒等混合感染
+• 群居环境（犬舍、宠物店）易爆发传播
+• 受凉、应激可诱发
+
+二、核心症状
+• 特征性空洞样强咳，咳嗽后常伴干呕
+• 精神、食欲基本正常为典型特点
+• 晨起、夜间、兴奋时咳嗽加重
+
+三、排除症状
+• 无血便、黄疸、尿闭、神经抽搐
+
+四、治疗方案
+• 止咳平喘、抗炎、必要时抗生素治疗
+• 口服药物配合雾化效果更佳
+
+五、护理要点
+• 注意保暖，避免受凉
+• 减少剧烈运动，避免刺激咽喉
+• 单犬饲养，防止传染其他犬`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "犬副流感",
+    cond: () => isDog,
+    symptoms: ["咳嗽", "流鼻涕", "发烧", "精神差"],
+    excludeSymptoms: ["血便", "腹水", "尿闭", "剧烈呕吐"],
+    duration: "1-2周",
+    info: `【犬副流感｜专业诊断】
+一、病因
+• 犬副流感病毒引起的呼吸道传染病
+• 传播速度快，幼犬、体弱犬症状更重
+
+二、核心症状
+• 突发咳嗽、流清涕或脓涕、发热
+• 精神沉郁、食欲下降
+• 可继发支气管炎、肺炎
+
+三、排除症状
+• 无血便、腹水、尿闭、剧烈呕吐
+
+四、治疗方案
+• 抗病毒、止咳、抗炎、对症支持
+• 继发感染时使用抗生素
+
+五、护理要点
+• 隔离饲养，环境消毒
+• 保温、多饮水、易消化饮食`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "胃扭转",
+    cond: () => isDog && (dogSize === "large" || dogSize === "middle"),
+    symptoms: ["腹部胀大", "干呕", "呼吸急促"],
+    excludeSymptoms: ["呕吐胆汁", "吐黄沫", "吐黄水", "咳嗽", "皮肤问题", "腹泻", "关节痛"],
+    duration: "1天内",
+    info: `【胃扭转（致命急症）｜专业诊断】
+一、病因
+• 胃体发生旋转，出入口同时闭锁
+• 大型犬、深胸犬高发
+• 饭后剧烈运动、暴饮暴食为主要诱因
+• 短时间内可致休克死亡
+
+二、核心症状
+• 腹部迅速胀大、紧绷，叩诊鼓音
+• 反复干呕，无法吐出内容物
+• 呼吸急促、心跳加快、黏膜苍白
+• 快速进入休克状态
+
+三、排除症状
+• 吐黄水、黄沫多为胃炎，并非胃扭转
+• 无明显腹泻、咳嗽、皮肤问题
+
+四、治疗方案
+• 立即急诊手术，是唯一救命手段
+• 术前抗休克、补液、吸氧
+• 胃减压、复位、固定防止复发
+
+五、护理要点
+• 少食多餐，餐后1小时内禁止运动
+• 避免快速进食，使用慢食碗
+• 出现腹胀干呕，立刻送医，分秒必争`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "胃胀气",
+    cond: () => isDog && (dogSize === "large" || dogSize === "middle"),
+    symptoms: ["腹部胀大", "干呕", "呼吸急促", "不适"],
+    excludeSymptoms: ["咳嗽", "皮肤问题", "腹泻", "关节痛"],
+    duration: "1天内",
+    info: `【胃胀气｜专业诊断】
+一、病因
+• 进食过快、吞入过多空气或食物发酵产气
+• 大型犬易发，可进展为胃扭转
+
+二、核心症状
+• 腹部膨胀、不安、腹痛
+• 干呕、流涎、呼吸偏快
+
+三、排除症状
+• 无咳嗽、皮肤病变、腹泻、关节痛
+
+四、治疗方案
+• 镇静、止痛、排气、抗休克
+• 必要时插管减压或手术
+
+五、护理要点
+• 餐后禁运动，少食多餐
+• 控制进食速度`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "犬心丝虫",
+    cond: () => isDog,
+    symptoms: ["咳嗽", "喘", "腹水肚大", "运动不耐"],
+    excludeSymptoms: ["呕吐血便", "尿闭", "皮肤感染"],
+    duration: "2周以上",
+    info: `【犬心丝虫｜专业诊断】
+一、病因
+• 蚊虫传播的丝虫寄生在右心及肺动脉
+• 慢性心肺损伤，晚期心衰
+
+二、核心症状
+• 运动能力下降、易疲劳、咳嗽气喘
+• 腹水、腹围增大、消瘦
+• 严重时突发呼吸困难、咳血
+
+三、排除症状
+• 无典型血便、尿闭、皮肤感染
+
+四、治疗方案
+• 成虫杀灭风险高，需专业医院分级治疗
+• 对症护心、抗炎、改善心肺功能
+
+五、护理要点
+• 按月口服驱虫药是最有效预防
+• 蚊虫季节严格防蚊`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "气管塌陷",
+    cond: () => isDog && dogSize === "small",
+    symptoms: ["咳嗽", "鹅叫样", "运动后喘"],
+    excludeSymptoms: ["呕吐", "腹泻", "血便", "尿闭", "黄疸"],
+    duration: "2周以上",
+    info: `【气管塌陷｜专业诊断】
+一、病因
+• 小型犬先天气管软骨软化退化
+• 肥胖、兴奋、脖链牵拉可加重
+
+二、核心症状
+• 典型“鹅叫样”干咳
+• 兴奋、运动、受热后咳嗽气喘加重
+
+三、排除症状
+• 无呕吐、腹泻、血便、尿闭、黄疸
+
+四、治疗方案
+• 止咳、抗炎、镇静、减重
+• 严重病例可手术支架
+
+五、护理要点
+• 改用胸背带，禁用脖链
+• 避免高温、兴奋、剧烈运动
+• 控制体重`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "莱姆病",
+    cond: () => isDog,
+    symptoms: ["发烧", "关节肿痛", "精神差"],
+    excludeSymptoms: ["呕吐血便", "尿闭", "腹水", "神经抽搐"],
+    duration: "1-2周",
+    info: `【莱姆病｜专业诊断】
+一、病因
+• 蜱虫传播的伯氏疏螺旋体感染
+• 春夏户外活动后高发
+
+二、核心症状
+• 发热、关节游走性肿痛、跛行
+• 精神沉郁、食欲下降
+
+三、排除症状
+• 无血便、尿闭、腹水、抽搐
+
+四、治疗方案
+• 足疗程抗生素治疗
+• 止痛、抗炎
+
+五、护理要点
+• 外出后检查体表，及时除蜱
+• 定期体外驱虫`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "钩端螺旋体病",
+    cond: () => isDog,
+    symptoms: ["发烧", "黄疸", "尿血", "肝肾损伤"],
+    excludeSymptoms: ["单纯咳嗽", "皮肤癣", "关节痛"],
+    duration: "1-2周",
+    info: `【钩端螺旋体病｜专业诊断】
+一、病因
+• 接触疫水、鼠尿污染环境感染
+• 可传染人类，属于人畜共患病
+
+二、核心症状
+• 高热、精神沉郁、呕吐
+• 黄疸、血红蛋白尿、肝肾损伤
+
+三、排除症状
+• 无单纯咳嗽、皮肤癣、关节痛
+
+四、治疗方案
+• 大剂量抗生素、保肝护肾、强力补液
+
+五、护理要点
+• 避免接触污染水源、死水
+• 接种疫苗，定期灭鼠`,
+    danger: true,
+    matchScore: 0
+  },
+
+  // ========== 共患疾病 ==========
+  {
+    name: "狂犬病",
+    cond: () => true,
+    symptoms: ["狂躁", "流口水", "攻击", "瘫痪"],
+    excludeSymptoms: ["单纯腹泻", "咳嗽", "皮肤问题"],
+    duration: "2周以上",
+    info: `【狂犬病（可传染人）｜专业诊断】
+一、病因
+• 狂犬病病毒感染，侵袭中枢神经系统
+• 患病动物咬伤、抓伤传播
+• 人畜共患，致死率100%
+
+二、核心症状
+• 行为异常、狂躁不安、攻击性强
+• 大量流涎、吞咽困难、恐水
+• 后期瘫痪、昏迷、呼吸衰竭死亡
+
+三、排除症状
+• 无单纯腹泻、咳嗽、皮肤病变
+
+四、治疗方案
+• 发病后无药可治，一律安乐死并无害化处理
+
+五、护理要点
+• 每年规范接种狂犬疫苗
+• 被不明动物咬伤立即处理伤口并就医`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "跳蚤感染",
+    cond: () => true,
+    symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
+    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    duration: "2周以上",
+    info: `【跳蚤感染｜专业诊断】
+一、病因
+• 体外寄生虫叮咬吸血，接触传播
+• 环境虫卵反复孵化，易反复感染
+
+二、核心症状
+• 剧烈瘙痒、啃咬抓挠皮肤
+• 脱毛、红疹、结痂
+• 重度感染可致贫血
+
+三、排除症状
+• 无持续高热、呕吐血便、神经症状
+
+四、治疗方案
+• 体外驱虫药杀灭成虫
+• 环境彻底清洁消毒
+
+五、护理要点
+• 按月体外驱虫，定期清洗窝具`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "蜱虫感染",
+    cond: () => true,
+    symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
+    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    duration: "2周以上",
+    info: `【蜱虫感染｜专业诊断】
+一、病因
+• 草丛环境蜱虫叮咬寄生
+• 可传播莱姆病等多种重病
+
+二、核心症状
+• 局部红肿瘙痒、脱毛、皮炎
+• 大量寄生可致贫血、虚弱
+
+三、排除症状
+• 无高热、呕吐血便、抽搐
+
+四、治疗方案
+• 正确移除蜱虫，体外驱虫
+• 局部消炎护理
+
+五、护理要点
+• 外出后全身检查，按月驱虫`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "耳螨感染",
+    cond: () => true,
+    symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
+    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    duration: "2周以上",
+    info: `【耳螨感染｜专业诊断】
+一、病因
+• 耳螨寄生耳道，接触高度传染
+• 猫比犬更易感
+
+二、核心症状
+• 频繁甩头、抓挠耳朵
+• 耳道黑褐色分泌物、异味
+
+三、排除症状
+• 无高热、呕吐血便、抽搐
+
+四、治疗方案
+• 洗耳、耳药杀螨、抗炎止痒
+
+五、护理要点
+• 多宠家庭同步治疗
+• 定期清洁耳道`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "疥螨感染",
+    cond: () => true,
+    symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
+    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    duration: "2周以上",
+    info: `【疥螨感染｜专业诊断】
+一、病因
+• 疥螨寄生皮肤，挖隧道刺激
+• 极强传染性，可传人
+
+二、核心症状
+• 全身剧烈瘙痒、脱毛、红疹、结痂
+• 眼周、四肢、腹部多发
+
+三、排除症状
+• 无高热、血便、神经症状
+
+四、治疗方案
+• 杀螨药浴、抗炎止痒、环境消毒
+
+五、护理要点
+• 隔离、严格驱虫、清洁环境`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "蠕形螨感染",
+    cond: () => true,
+    symptoms: ["瘙痒", "掉毛", "皮肤红疹", "贫血"],
+    excludeSymptoms: ["高热", "呕吐", "便血", "神经抽搐"],
+    duration: "2周以上",
+    info: `【蠕形螨感染｜专业诊断】
+一、病因
+• 毛囊蠕形螨过度增殖，免疫低下时发病
+• 青年犬、免疫抑制动物多发
+
+二、核心症状
+• 局部或全身脱毛、皮屑、红斑
+• 轻中度瘙痒，继发感染加重
+
+三、排除症状
+• 无高热、血便、抽搐
+
+四、治疗方案
+• 杀螨、抗炎、调节免疫
+
+五、护理要点
+• 足疗程治疗，避免反复`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "蛔虫病",
+    cond: () => true,
+    symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
+    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    duration: "2周以上",
+    info: `【蛔虫病｜专业诊断】
+一、病因
+• 消化道线虫寄生，幼宠高发
+• 经口或胎盘感染
+
+二、核心症状
+• 腹泻、消瘦、腹围膨大
+• 呕吐或粪便中可见虫体
+
+三、排除症状
+• 无持续高热、皮肤癣、严重呼吸困难
+
+四、治疗方案
+• 口服广谱体内驱虫药
+
+五、护理要点
+• 幼宠定期驱虫，清理粪便`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "钩虫病",
+    cond: () => true,
+    symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
+    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    duration: "2周以上",
+    info: `【钩虫病｜专业诊断】
+一、病因
+• 钩虫咬附肠道吸血，致贫血黑便
+
+二、核心症状
+• 血便、黑便、贫血、黏膜苍白
+• 消瘦、腹泻、软弱无力
+
+三、排除症状
+• 无高热、皮肤癣、呼吸困难
+
+四、治疗方案
+• 驱虫、止血、补血、补液
+
+五、护理要点
+• 定期体内驱虫，保持环境干燥`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "绦虫病",
+    cond: () => true,
+    symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
+    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    duration: "2周以上",
+    info: `【绦虫病｜专业诊断】
+一、病因
+• 吞食跳蚤或生肉感染
+• 肛门见米粒样节片
+
+二、核心症状
+• 肛周瘙痒、摩擦屁股
+• 消瘦、消化不良
+
+三、排除症状
+• 无高热、皮肤癣、呼吸困难
+
+四、治疗方案
+• 专用绦虫驱虫药
+• 同步驱跳蚤
+
+五、护理要点
+• 禁止生肉饮食，定期驱虫`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "球虫病",
+    cond: () => true,
+    symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
+    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    duration: "2周以上",
+    info: `【球虫病｜专业诊断】
+一、病因
+• 肠道原虫感染，幼宠易感
+• 潮湿拥挤环境易爆发
+
+二、核心症状
+• 黏液血便、腹泻、里急后重
+• 消瘦、脱水
+
+三、排除症状
+• 无高热、皮肤癣、呼吸困难
+
+四、治疗方案
+• 专用抗原虫药、止泻补液
+
+五、护理要点
+• 环境干燥，及时清理粪便`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "滴虫病",
+    cond: () => true,
+    symptoms: ["拉稀", "消瘦", "呕吐虫体", "便血"],
+    excludeSymptoms: ["高热不退", "皮肤癣", "呼吸困难"],
+    duration: "2周以上",
+    info: `【滴虫病｜专业诊断】
+一、病因
+• 阴道毛滴虫/胎三毛滴虫感染
+• 接触传播，顽固易反复
+
+二、核心症状
+• 慢性黏液血便、腹泻反复发作
+• 食欲一般、体重下降
+
+三、排除症状
+• 无高热、皮肤癣、呼吸困难
+
+四、治疗方案
+• 专用抗原虫药，足疗程
+
+五、护理要点
+• 多宠同查同治，环境消毒`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "弓形虫病",
+    cond: () => true,
+    symptoms: ["发热", "淋巴结肿大", "神经症状"],
+    excludeSymptoms: ["剧烈腹泻", "皮肤癣", "呼吸道症状"],
+    duration: "2周以上",
+    info: `【弓形虫病｜专业诊断】
+一、病因
+• 弓形虫感染，食生肉、接触猫粪传播
+• 免疫低下、孕妇需高度重视
+
+二、核心症状
+• 发热、淋巴结肿大、精神差
+• 神经症状、眼部炎症
+
+三、排除症状
+• 无剧烈腹泻、皮肤癣、典型呼吸道症状
+
+四、治疗方案
+• 磺胺类药物为主的综合治疗
+
+五、护理要点
+• 肉类彻底煮熟，猫砂每日清理`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "贾第虫病",
+    cond: () => true,
+    symptoms: ["软便", "黏液便", "反复腹泻"],
+    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    duration: "2周以上",
+    info: `【贾第虫病（可传染人）｜专业诊断】
+一、病因
+• 贾第鞭毛虫寄生小肠
+• 水源污染、接触传播
+
+二、核心症状
+• 反复软便、黏液便、腹泻
+• 腹胀、消化不良、消瘦
+
+三、排除症状
+• 无高热、剧烈呕吐、神经症状
+
+四、治疗方案
+• 抗原虫药、调节肠道菌群
+
+五、护理要点
+• 保证饮水清洁，定期驱虫`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "猫癣",
+    cond: () => true,
+    symptoms: ["圆形掉毛", "皮屑", "瘙痒"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "呼吸困难"],
+    duration: "2周以上",
+    info: `【猫癣（可传染人）｜专业诊断】
+一、病因
+• 犬小孢子菌等真菌感染
+• 接触传染，潮湿环境加重
+
+二、核心症状
+• 圆形脱毛斑、皮屑、结痂
+• 轻度瘙痒，多从头面躯干开始
+
+三、排除症状
+• 无呕吐腹泻、高热、呼吸困难
+
+四、治疗方案
+• 抗真菌药浴、外用或口服抗真菌药
+
+五、护理要点
+• 隔离消毒，增强营养与免疫力`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "狗癣",
+    cond: () => true,
+    symptoms: ["圆形掉毛", "皮屑", "瘙痒"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "呼吸困难"],
+    duration: "2周以上",
+    info: `【狗癣（可传染人）｜专业诊断】
+一、病因
+• 皮肤真菌感染，接触传播
+• 幼龄、体弱、潮湿环境多发
+
+二、核心症状
+• 圆形脱毛、鳞屑、红斑、瘙痒
+• 可扩散全身
+
+三、排除症状
+• 无呕吐腹泻、高热、呼吸困难
+
+四、治疗方案
+• 抗真菌药浴、外用或口服药物
+
+五、护理要点
+• 环境消毒，避免接触患病动物`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "细菌性脓皮症",
+    cond: () => true,
+    symptoms: ["皮肤红疹", "脓包", "破皮", "异味"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽", "神经症状"],
+    duration: "1-2周",
+    info: `【细菌性脓皮症｜专业诊断】
+一、病因
+• 葡萄球菌等细菌继发感染
+• 常由过敏、寄生虫、外伤诱发
+
+二、核心症状
+• 红斑、丘疹、脓疱、破溃结痂
+• 皮肤异味、瘙痒
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽、神经症状
+
+四、治疗方案
+• 局部护理+全身抗生素足疗程
+
+五、护理要点
+• 治疗原发病，保持皮肤干燥`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "过敏性皮炎",
+    cond: () => true,
+    symptoms: ["瘙痒", "红斑", "丘疹", "渗出", "脱毛"],
+    excludeSymptoms: ["呕吐腹泻", "发热便血"],
+    duration: "1-2周",
+    info: `【过敏性皮炎｜专业诊断】
+一、病因
+• 食物、环境、跳蚤叮咬引发过敏
+• 免疫异常反应损伤皮肤
+
+二、核心症状
+• 全身剧烈瘙痒、红斑、丘疹
+• 抓挠致脱毛、渗出、结痂
+
+三、排除症状
+• 无呕吐腹泻、发热便血
+
+四、治疗方案
+• 抗过敏、止痒、抗炎、避开过敏原
+
+五、护理要点
+• 低敏饮食，定期驱虫，环境除尘`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "湿疹",
+    cond: () => true,
+    symptoms: ["瘙痒", "红斑", "丘疹", "渗出", "脱毛"],
+    excludeSymptoms: ["呕吐腹泻", "发热便血"],
+    duration: "1-2周",
+    info: `【湿疹｜专业诊断】
+一、病因
+• 潮湿、摩擦、过敏、感染综合诱发
+• 急性渗出性皮炎
+
+二、核心症状
+• 红斑、丘疹、剧烈瘙痒
+• 湿性渗出、结痂、脱毛
+
+三、排除症状
+• 无呕吐腹泻、发热便血
+
+四、治疗方案
+• 保持干燥、抗炎、止痒、抗感染
+
+五、护理要点
+• 避免潮湿闷热，防止舔咬抓挠`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "脂溢性皮炎",
+    cond: () => true,
+    symptoms: ["皮屑多", "油脂旺", "瘙痒", "脱毛"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    duration: "2周以上",
+    info: `【脂溢性皮炎｜专业诊断】
+一、病因
+• 皮脂腺分泌异常，遗传/内分泌/营养相关
+• 分干屑型与油脂型
+
+二、核心症状
+• 大量皮屑、被毛油腻、异味
+• 瘙痒、脱毛、继发皮炎
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽
+
+四、治疗方案
+• 控油药浴、抗炎、补充必需脂肪酸
+
+五、护理要点
+• 调整饮食，规律皮肤护理`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "急性肠胃炎",
+    cond: () => true,
+    symptoms: ["呕吐", "拉稀", "腹痛", "食欲差"],
+    excludeSymptoms: ["高热不退", "神经抽搐", "血尿"],
+    duration: "2-3天",
+    info: `【急性肠胃炎｜专业诊断】
+一、病因
+• 饮食不当、受凉、细菌/病毒感染
+• 暴饮暴食、异物刺激诱发
+
+二、核心症状
+• 呕吐、腹泻、腹痛、精神沉郁
+• 食欲下降或废绝
+
+三、排除症状
+• 无持续高热、神经抽搐、血尿
+
+四、治疗方案
+• 短期禁食、补液、止吐止泻、益生菌
+
+五、护理要点
+• 清淡易消化饮食，规律喂食，忌乱喂`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "慢性肠胃炎",
+    cond: () => true,
+    symptoms: ["呕吐", "拉稀", "腹痛", "食欲差"],
+    excludeSymptoms: ["高热不退", "神经抽搐", "血尿"],
+    duration: "2周以上",
+    info: `【慢性肠胃炎｜专业诊断】
+一、病因
+• 急性反复不愈、食物敏感、免疫异常
+• 长期胃肠黏膜损伤
+
+二、核心症状
+• 间歇性呕吐、软便腹泻
+• 消瘦、吸收不良
+
+三、排除症状
+• 无高热、抽搐、血尿
+
+四、治疗方案
+• 长期肠道调理、易消化处方粮
+• 抗炎、调节菌群
+
+五、护理要点
+• 稳定饮食，避免刺激，长期管理`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "胰腺炎",
+    cond: () => true && isFat,
+    symptoms: ["腹痛弓背", "呕吐", "不吃饭", "油腻饮食史"],
+    excludeSymptoms: ["血便", "皮肤感染", "神经症状"],
+    duration: "4-7天",
+    info: `【胰腺炎（重症）｜专业诊断】
+一、病因
+• 高脂肪饮食、肥胖、应激等诱发
+• 胰酶提前激活，自我消化损伤
+
+二、核心症状
+• 剧烈腹痛、弓背收腹、不安呻吟
+• 频繁呕吐、完全拒食
+
+三、排除症状
+• 无血便、皮肤感染、神经症状
+
+四、治疗方案
+• 严格禁食禁水、强力补液、止痛
+• 抑酶、护胰、抗感染
+
+五、护理要点
+• 长期低脂饮食，控制体重，严禁油腻`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "便秘",
+    cond: () => true,
+    symptoms: ["排便困难", "腹痛", "食欲差"],
+    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    duration: "1-2周",
+    info: `【便秘｜专业诊断】
+一、病因
+• 饮水少、膳食纤维不足、毛球、疼痛诱发
+
+二、核心症状
+• 频繁努责、排干硬粪或排不出
+• 腹胀、腹痛、食欲下降
+
+三、排除症状
+• 无高热、剧烈呕吐、神经症状
+
+四、治疗方案
+• 通便、软化粪便、补液、益生菌
+
+五、护理要点
+• 充足饮水、增加纤维、定期梳毛`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "腹泻",
+    cond: () => true,
+    symptoms: ["稀便", "腹痛", "食欲差"],
+    excludeSymptoms: ["高热", "剧烈呕吐", "神经症状"],
+    duration: "2-3天",
+    info: `【腹泻｜专业诊断】
+一、病因
+• 饮食、感染、应激、寄生虫等多种原因
+
+二、核心症状
+• 粪便稀软、水样、次数增多
+• 可伴轻微腹痛、食欲下降
+
+三、排除症状
+• 无高热、剧烈呕吐、神经症状
+
+四、治疗方案
+• 止泻、补液、调节肠道菌群
+
+五、护理要点
+• 暂时清淡饮食，注意腹部保暖`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "消化道异物",
+    cond: () => true,
+    symptoms: ["呕吐", "便秘", "腹胀", "腹痛"],
+    excludeSymptoms: ["皮肤癣", "咳嗽流涕"],
+    duration: "1-2周",
+    info: `【消化道异物｜专业诊断】
+一、病因
+• 误食玩具、骨头、线、塑料等异物
+• 堵塞或损伤消化道
+
+二、核心症状
+• 间歇性或持续性呕吐
+• 排便异常、腹胀、腹痛
+
+三、排除症状
+• 无皮肤癣、咳嗽流涕
+
+四、治疗方案
+• 拍片/内镜确诊，内镜或手术取出
+
+五、护理要点
+• 避免啃咬危险物品，及时纠正异食`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "肠梗阻",
+    cond: () => true,
+    symptoms: ["呕吐", "腹痛", "拒食", "精神差"],
+    excludeSymptoms: ["皮肤癣", "咳嗽流涕"],
+    duration: "1-2周",
+    info: `【肠梗阻｜专业诊断】
+一、病因
+• 异物、肠套叠、肿瘤等致肠道完全堵塞
+
+二、核心症状
+• 剧烈频繁呕吐、完全不排便
+• 腹痛拒按、拒食、快速脱水休克
+
+三、排除症状
+• 无皮肤癣、咳嗽流涕
+
+四、治疗方案
+• 急诊手术解除梗阻、补液抗休克
+
+五、护理要点
+• 防止误食异物，突发呕吐立即就医`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "肝胆疾病",
+    cond: () => true,
+    symptoms: ["皮肤黄染", "呕吐", "厌食", "精神差"],
+    excludeSymptoms: ["咳嗽流涕", "皮肤癣斑"],
+    duration: "2周以上",
+    info: `【肝胆疾病｜专业诊断】
+一、病因
+• 感染、中毒、脂肪沉积、肿瘤致肝损伤
+• 代谢、排毒、合成功能下降
+
+二、核心症状
+• 皮肤/黏膜黄疸、尿色加深
+• 呕吐、厌食、消瘦、腹水
+
+三、排除症状
+• 无咳嗽流涕、皮肤癣斑
+
+四、治疗方案
+• 保肝、利胆、降酶、营养支持
+
+五、护理要点
+• 避免肝毒性药物食物，定期体检`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "黄疸",
+    cond: () => true,
+    symptoms: ["皮肤黄染", "呕吐", "厌食", "精神差"],
+    excludeSymptoms: ["咳嗽流涕", "皮肤癣斑"],
+    duration: "2周以上",
+    info: `【黄疸｜专业诊断】
+一、病因
+• 溶血、肝胆阻塞、肝细胞损伤致胆红素升高
+• 属于症状，非独立疾病
+
+二、核心症状
+• 眼结膜、口腔、皮肤黄染
+• 呕吐、精神差、尿色深黄
+
+三、排除症状
+• 无咳嗽流涕、皮肤癣斑
+
+四、治疗方案
+• 针对溶血、肝病、胆道病因治疗
+
+五、护理要点
+• 发现黄疸立刻就医查因`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "膀胱炎",
+    cond: () => true,
+    symptoms: ["尿频", "尿急", "尿痛", "血尿"],
+    excludeSymptoms: ["呕吐腹泻", "咳嗽", "神经症状"],
+    duration: "1-2周",
+    info: `【膀胱炎｜专业诊断】
+一、病因
+• 细菌感染、刺激、憋尿引发
+• 母宠尿道短宽更易发
+
+二、核心症状
+• 频繁蹲厕、排尿困难、尿痛叫
+• 血尿、尿频量少
+
+三、排除症状
+• 无呕吐腹泻、咳嗽、神经症状
+
+四、治疗方案
+• 抗生素、碱化尿液、止痛、多饮水
+
+五、护理要点
+• 清洁猫砂/环境，鼓励饮水，不憋尿`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "尿路感染",
+    cond: () => true,
+    symptoms: ["尿频", "尿急", "尿痛", "血尿"],
+    excludeSymptoms: ["呕吐腹泻", "咳嗽", "神经症状"],
+    duration: "1-2周",
+    info: `【尿路感染｜专业诊断】
+一、病因
+• 细菌上行感染尿道、膀胱
+• 卫生差、憋尿、应激为诱因
+
+二、核心症状
+• 尿频、尿痛、血尿、尿淋漓
+• 频繁舔舐尿道口
+
+三、排除症状
+• 无呕吐腹泻、咳嗽、神经症状
+
+四、治疗方案
+• 抗感染、消炎、利尿、止痛
+
+五、护理要点
+• 保持泌尿卫生，增加饮水`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "膀胱结石",
+    cond: () => true,
+    symptoms: ["排尿困难", "血尿", "尿频", "尿闭"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    duration: "1-2周",
+    info: `【膀胱结石｜专业诊断】
+一、病因
+• 饮食、饮水、感染、尿液PH异常形成结石
+• 摩擦损伤尿路，可致梗阻
+
+二、核心症状
+• 尿频、血尿、排尿疼痛不畅
+• 完全堵塞则尿闭，危及生命
+
+三、排除症状
+• 无呕吐腹泻、高热、咳嗽
+
+四、治疗方案
+• 处方粮溶石、手术取石、控制感染
+
+五、护理要点
+• 多饮水、喂处方粮、避免憋尿`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "尿道结石",
+    cond: () => true,
+    symptoms: ["排尿困难", "血尿", "尿频", "尿闭"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    duration: "1-2周",
+    info: `【尿道结石｜专业诊断】
+一、病因
+• 结石卡在尿道，公宠更易梗阻
+• 饮食、饮水、感染为主要诱因
+
+二、核心症状
+• 剧烈腹痛、频繁努责无尿
+• 血尿、呕吐、快速尿毒症
+
+三、排除症状
+• 无呕吐腹泻、高热、咳嗽
+
+四、治疗方案
+• 紧急导尿疏通、手术取石
+
+五、护理要点
+• 增加饮水，用处方粮预防复发`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "急性肾衰竭",
+    cond: () => true && isOld,
+    symptoms: ["呕吐", "厌食", "少尿", "贫血"],
+    excludeSymptoms: ["咳嗽流涕", "皮肤感染"],
+    duration: "2周以上",
+    info: `【急性肾衰竭｜专业诊断】
+一、病因
+• 中毒、感染、缺血、梗阻致肾快速损伤
+• 滤过排泄功能急剧下降
+
+二、核心症状
+• 突然呕吐、厌食、精神极差
+• 少尿或无尿、脱水、贫血
+
+三、排除症状
+• 无咳嗽流涕、皮肤感染
+
+四、治疗方案
+• 强力补液、纠正电解质、对症支持
+• 必要时透析
+
+五、护理要点
+• 远离毒物，出现少尿无尿立即急救`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "慢性肾衰竭",
+    cond: () => true && isOld,
+    symptoms: ["呕吐", "厌食", "多饮多尿", "贫血"],
+    excludeSymptoms: ["咳嗽流涕", "皮肤感染"],
+    duration: "2周以上",
+    info: `【慢性肾衰竭｜专业诊断】
+一、病因
+• 老年退行性、长期肾病、中毒所致
+• 肾功能不可逆渐进丧失
+
+二、核心症状
+• 多饮多尿、体重下降、被毛粗乱
+• 反复呕吐、贫血、口臭尿味
+
+三、排除症状
+• 无咳嗽流涕、皮肤感染
+
+四、治疗方案
+• 肾衰处方粮、降磷、护肾、补液
+
+五、护理要点
+• 终身饮食管理，定期复查，充足饮水`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "血尿",
+    cond: () => true,
+    symptoms: ["尿液带血", "排尿痛苦"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    duration: "1-2周",
+    info: `【血尿｜专业诊断】
+一、病因
+• 结石、感染、创伤、中毒、凝血异常
+
+二、核心症状
+• 尿液呈红色、粉色或血丝血块
+• 排尿疼痛、焦虑不安
+
+三、排除症状
+• 无呕吐腹泻、高热、咳嗽
+
+四、治疗方案
+• 抗感染、止血、治疗结石/中毒原发病
+
+五、护理要点
+• 避免葱类等溶血食物，及时查因`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "感冒",
+    cond: () => true,
+    symptoms: ["咳嗽", "流涕", "打喷嚏", "低热", "精神差"],
+    excludeSymptoms: ["呕吐", "拉稀", "抽搐", "便血"],
+    duration: "2-3天",
+    info: `【感冒（上呼吸道感染）｜专业诊断】
+一、病因
+• 受凉、应激致抵抗力下降，病毒/细菌感染
+
+二、核心症状
+• 打喷嚏、流清涕、轻微咳嗽
+• 低热、精神食欲略差
+
+三、排除症状
+• 无呕吐、拉稀、抽搐、便血
+
+四、治疗方案
+• 止咳、退热、对症护理、增强免疫
+
+五、护理要点
+• 保暖休息、清淡饮食、避免受凉`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "支气管炎",
+    cond: () => true,
+    symptoms: ["咳嗽", "咳痰", "发热", "呼吸急促"],
+    excludeSymptoms: ["呕吐腹泻", "便血", "神经症状"],
+    duration: "1-2周",
+    info: `【支气管炎｜专业诊断】
+一、病因
+• 上呼吸道感染下行引发支气管炎症
+
+二、核心症状
+• 持续性咳嗽、咳痰、发热
+• 呼吸稍急促、精神下降
+
+三、排除症状
+• 无呕吐腹泻、便血、神经症状
+
+四、治疗方案
+• 抗生素、止咳化痰、雾化
+
+五、护理要点
+• 保温、加湿、减少刺激与运动`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "肺炎",
+    cond: () => true,
+    symptoms: ["咳嗽", "咳痰", "发热", "呼吸急促"],
+    excludeSymptoms: ["呕吐腹泻", "便血", "神经症状"],
+    duration: "1-2周",
+    info: `【肺炎｜专业诊断】
+一、病因
+• 病毒、细菌、异物吸入致肺部实质炎症
+• 幼犬、体弱、受凉后多发
+
+二、核心症状
+• 高热、剧烈咳嗽、脓性鼻分泌物
+• 明显呼吸急促、呼吸困难、肺部啰音
+
+三、排除症状
+• 无呕吐腹泻、便血、神经症状
+
+四、治疗方案
+• 住院吸氧、强力抗生素、雾化、补液
+
+五、护理要点
+• 保温隔离，加强营养，预防感冒`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "牙结石",
+    cond: () => true,
+    symptoms: ["口臭", "牙龈出血", "牙松动"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    duration: "2周以上",
+    info: `【牙结石｜专业诊断】
+一、病因
+• 食物残渣矿化形成结石，长期堆积
+• 口腔卫生差是主因
+
+二、核心症状
+• 严重口臭、牙面黄褐色结石
+• 牙龈红肿出血、牙齿松动
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽
+
+四、治疗方案
+• 全麻超声洗牙、抛光、刮治
+
+五、护理要点
+• 日常刷牙、洁齿零食、定期口腔护理`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "牙周炎",
+    cond: () => true,
+    symptoms: ["口臭", "牙龈出血", "牙松动"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    duration: "2周以上",
+    info: `【牙周炎｜专业诊断】
+一、病因
+• 牙结石持续刺激致牙周组织感染破坏
+• 可致牙槽骨吸收、牙齿脱落
+
+二、核心症状
+• 口臭、牙龈退缩出血、牙周溢脓
+• 牙齿松动、咀嚼疼痛
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽
+
+四、治疗方案
+• 洁牙、牙周护理、抗生素，必要时拔牙
+
+五、护理要点
+• 坚持口腔清洁，定期检查`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "牙龈炎",
+    cond: () => true,
+    symptoms: ["口臭", "牙龈出血", "牙松动"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    duration: "2周以上",
+    info: `【牙龈炎｜专业诊断】
+一、病因
+• 牙菌斑、结石刺激牙龈引发炎症
+• 疼痛影响进食
+
+二、核心症状
+• 牙龈红肿、易出血、口臭
+• 拒食硬食、咀嚼不适
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽
+
+四、治疗方案
+• 洁牙、口腔消炎、抗菌护理
+
+五、护理要点
+• 日常清洁口腔，减少炎症复发`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "口腔溃疡",
+    cond: () => true,
+    symptoms: ["口腔疼痛", "流涎", "拒食", "口臭"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    duration: "1-2周",
+    info: `【口腔溃疡｜专业诊断】
+一、病因
+• 外伤、刺激、感染、免疫异常引发
+
+二、核心症状
+• 口腔黏膜糜烂溃疡、疼痛明显
+• 流口水、拒食、口臭、咀嚼躲闪
+
+三、排除症状
+• 无呕吐腹泻、高热、咳嗽
+
+四、治疗方案
+• 口腔清洁、消炎、止痛、促修复
+
+五、护理要点
+• 避免尖锐硬食，补充维生素`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "口臭",
+    cond: () => true,
+    symptoms: ["口腔异味", "流涎", "拒食"],
+    excludeSymptoms: ["呕吐腹泻", "高热", "咳嗽"],
+    duration: "2周以上",
+    info: `【口臭｜专业诊断】
+一、病因
+• 口腔卫生差、牙周病、口腔溃疡
+• 肾衰、糖尿病等全身病亦可引发
+
+二、核心症状
+• 呼吸气味难闻、口腔异味重
+• 可伴流涎、食欲下降
+
+三、排除症状
+• 无呕吐腹泻、高热、咳嗽
+
+四、治疗方案
+• 口腔清洁护理，治疗牙周病/全身病
+
+五、护理要点
+• 长期口腔护理，定期体检`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "子宫蓄脓",
+    cond: () => isFemale && !isSterile,
+    symptoms: ["腹部胀大", "生殖器流脓", "多饮多尿"],
+    excludeSymptoms: ["咳嗽流涕", "腹泻便血"],
+    duration: "2周以上",
+    info: `【子宫蓄脓（母畜）｜专业诊断】
+一、病因
+• 未绝育母畜发情后激素紊乱
+• 子宫内膜增生感染，脓液积聚
+• 中老年未绝育母宠高发
+
+二、核心症状
+• 开放型：阴门流脓、异味、舔舐增多
+• 闭合型：腹围增大、无流脓，更危险
+• 多饮多尿、呕吐、精神差
+
+三、排除症状
+• 无咳嗽流涕、腹泻便血
+
+四、治疗方案
+• 紧急手术切除子宫卵巢
+• 补液、抗感染、抗休克
+
+五、护理要点
+• 适龄绝育是唯一根本预防`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "乳腺炎",
+    cond: () => isFemale && !isSterile,
+    symptoms: ["乳房红肿痛", "泌乳异常"],
+    excludeSymptoms: ["呕吐腹泻", "咳嗽高热"],
+    duration: "1-2周",
+    info: `【乳腺炎｜专业诊断】
+一、病因
+• 产后感染、挤压、外伤、乳汁淤积
+
+二、核心症状
+• 乳房红肿、发热、疼痛拒按
+• 乳汁浑浊、带血或脓性
+
+三、排除症状
+• 无呕吐腹泻、咳嗽高热
+
+四、治疗方案
+• 抗生素、消炎、通乳、局部护理
+
+五、护理要点
+• 保持清洁，及时排空乳汁，预防外伤`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "关节问题",
+    cond: () => true && (isOld || isFat),
+    symptoms: ["跛行", "疼痛", "瘫痪", "起身困难"],
+    excludeSymptoms: ["呕吐腹泻", "发热咳嗽"],
+    duration: "2周以上",
+    info: `【关节/椎间盘问题｜专业诊断】
+一、病因
+• 老年退变、肥胖劳损、先天发育不良
+• 椎间盘突出可致瘫痪
+
+二、核心症状
+• 起身困难、上下跳犹豫、跛行
+• 敏感疼痛、弓背、严重后肢瘫痪
+
+三、排除症状
+• 无呕吐腹泻、发热咳嗽
+
+四、治疗方案
+• 止痛、抗炎、修复软骨、减重
+• 瘫痪需急诊手术
+
+五、护理要点
+• 控制体重，避免跳上跳下，适度运动`,
+    danger: false,
+    matchScore: 0
+  },
+  {
+    name: "葱类中毒",
+    cond: () => true,
+    symptoms: ["溶血", "贫血", "血尿"],
+    excludeSymptoms: ["咳嗽流涕", "皮肤癣"],
+    duration: "1天内",
+    info: `【葱类中毒｜专业诊断】
+一、病因
+• 误食葱、洋葱、大蒜、韭菜等
+• 破坏红细胞，引发急性溶血
+
+二、核心症状
+• 虚弱、黏膜苍白、呼吸急促
+• 血红蛋白尿（红酒色/茶色尿）、黄疸
+
+三、排除症状
+• 无咳嗽流涕、皮肤癣
+
+四、治疗方案
+• 紧急补液、抗氧化、必要时输血
+
+五、护理要点
+• 绝对禁止喂食葱蒜类食物`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "老鼠药中毒",
+    cond: () => true,
+    symptoms: ["呕吐", "抽搐", "出血"],
+    excludeSymptoms: ["单纯咳嗽", "皮肤癣"],
+    duration: "1天内",
+    info: `【老鼠药中毒｜专业诊断】
+一、病因
+• 误食毒饵或中毒死鼠
+• 抗凝血类多见，破坏凝血功能
+
+二、核心症状
+• 皮下出血、鼻出血、呕血、便血
+• 贫血、呼吸困难、抽搐昏迷
+
+三、排除症状
+• 无单纯咳嗽、皮肤癣
+
+四、治疗方案
+• 催吐洗胃、维生素K1特效解毒
+• 止血、输血、支持
+
+五、护理要点
+• 妥善存放鼠药，防止误食`,
+    danger: true,
+    matchScore: 0
+  },
+  {
+    name: "呕吐胆汁/急性胃炎",
+    cond: () => true,
+    symptoms: ["呕吐胆汁", "吐黄沫", "吐黄水", "空腹呕吐"],
+    excludeSymptoms: ["抽搐", "流口水", "腹部胀大", "干呕"],
+    duration: "1天内",
+    info: `【呕吐胆汁/急性胃炎（最常见）｜专业诊断】
+一、病因
+• 空腹过久、饮食刺激、轻微胃炎
+• 胃酸胆汁刺激胃黏膜引发呕吐
+
+二、核心症状
+• 空腹时吐黄水、黄沫、黄绿色胆汁
+• 呕吐后精神尚可，进食后缓解
+
+三、排除症状
+• 无抽搐、流涎、腹胀、持续干呕
+
+四、治疗方案
+• 短暂禁食6-8小时，少量多次饮水
+• 止吐、护胃、益生菌调理
+
+五、护理要点
+• 规律定时喂食，避免长时间空腹`,
+    danger: false,
+    matchScore: 0
+  },
+
+  // 诊断逻辑
+  let matchedDiseases = [];
+  rules.forEach(rule => {
+    if (!rule.cond()) return;
+    
+    let symptomMatchCount = 0;
+    rule.symptoms.forEach(symptom => {
+      if (allSymptoms.includes(symptom)) symptomMatchCount++;
     });
-
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({ message: "未知错误" }));
-      throw new Error(`API返回错误 [${res.status}]：${errorData.error?.message || errorData.message}`);
+    
+    let excludeMatchCount = 0;
+    rule.exclude.forEach(exclude => {
+      if (allSymptoms.includes(exclude)) excludeMatchCount++;
+    });
+    
+    if (excludeMatchCount > 0) return;
+    
+    const durationWeight = getDurationWeight(day, rule.duration);
+    const totalScore = symptomMatchCount * durationWeight;
+    
+    if (totalScore >= 2) {
+      matchedDiseases.push({
+        name: rule.name,
+        score: totalScore,
+        info: rule.info,
+        danger: rule.danger
+      });
     }
+  });
 
-    const data = await res.json();
-    const aiText = data.choices?.[0]?.message?.content || "未获取到解答结果";
-    result.innerText = `【豆包 AI 疾病解答】\n问题：${q}\n——————————————\n${aiText}`;
-    result.style.display = "block";
-  } catch (e) {
-    result.innerText = `查询失败：
-1. 错误原因：${e.message}
-2. 排查建议：
-   - 请用本地服务器访问（python -m http.server 8080）
-   - 检查API Key是否正确`;
-    result.style.display = "block";
-    console.error("百科查询错误：", e);
-  } finally {
-    loading.style.display = "none";
+  // 排序并生成报告
+  matchedDiseases.sort((a, b) => b.score - a.score);
+  
+  if (matchedDiseases.length > 0) {
+    hasDiagnosis = true;
+    matchedDiseases.forEach(d => {
+      if (d.danger) hasDanger = true;
+      r += `🔴 ${d.name}（匹配度：${d.score}）\n${d.info}\n\n`;
+    });
+  } else {
+    r += `【初步诊断】
+未匹配到典型疾病特征，可能为：
+1. 普通肠胃炎/呼吸道感染
+2. 应激反应/饮食不当
+3. 需进一步检查确诊
+
+【建议】
+• 观察精神、食欲、排便情况
+• 避免乱用药，及时就医检查
+• 记录症状变化，便于兽医诊断
+`;
   }
+
+  if (hasDanger) {
+    r += `\n⚠️ 紧急提醒：诊断结果包含高危疾病，建议立即就医，延误可能危及生命！`;
+  }
+
+  document.getElementById('report').style.display = 'block';
+  document.getElementById('report').innerText = r;
+
+  // 保存诊疗记录
+  let his = JSON.parse(localStorage.getItem(getStorageKey(HIS)) || "[]");
+  his.unshift({
+    id: Date.now(),
+    petId: pet.id,
+    petName: pet.name,
+    petType: pet.type,
+    date: new Date().toLocaleString(),
+    symptoms: originalSym,
+    report: r
+  });
+  localStorage.setItem(getStorageKey(HIS), JSON.stringify(his));
 });
 
-// 诊疗记录
-function loadHis(){
-  let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
-  let box = document.getElementById('hisList');
-  let delBar = document.getElementById('deleteControls');
-  if(hs.length===0){ box.innerHTML="<div style=padding:10px>暂无记录</div>"; delBar.style.display='none'; return; }
-  delBar.style.display='flex';
-  box.innerHTML = hs.map(h=>`
+// 加载诊疗记录
+function loadHis() {
+  let his = JSON.parse(localStorage.getItem(getStorageKey(HIS)) || "[]");
+  let hisList = document.getElementById('hisList');
+  
+  if (his.length === 0) {
+    hisList.innerHTML = "<div style='padding:10px;text-align:center;color:#777;'>暂无诊疗记录</div>";
+    document.getElementById('deleteControls').style.display = 'none';
+    return;
+  }
+  
+  document.getElementById('deleteControls').style.display = 'flex';
+  
+  hisList.innerHTML = his.map(item => `
     <div class="his-item">
       <div class="his-top">
         <div style="display:flex;align-items:center;">
-          <input type="checkbox" class="his-checkbox" data-id="${h.id}">
-          <h4>${h.name}（${h.type}）｜${h.t}</h4>
+          <input type="checkbox" class="his-checkbox" data-id="${item.id}">
+          <h4>${item.petName}（${item.petType}）-${item.date}</h4>
         </div>
-        <button class="delHis" data-id="${h.id}">删除</button>
+        <button onclick="toggleHisBody(${item.id})">查看</button>
       </div>
-      <div class="his-body">${h.text}</div>
+      <div class="his-body" id="his-${item.id}">${item.report}</div>
     </div>
   `).join('');
-  box.querySelectorAll('.delHis').forEach(b=>{
-    b.addEventListener('click', function() {
-      if(!confirm("删除？"))return;
-      let arr = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
-      arr = arr.filter(x=>x.id!=this.dataset.id);
-      localStorage.setItem(getStorageKey(HIS), JSON.stringify(arr));
-      loadHis();
-    });
-  });
-  box.querySelectorAll('.his-top').forEach(t=>{
-    t.addEventListener('click', function(e) {
-      if(e.target.classList.contains('his-checkbox')) return;
-      let body = this.nextElementSibling;
-      body.style.display = body.style.display=="none"?"block":"none";
+  
+  // 绑定复选框事件
+  document.querySelectorAll('.his-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('click', function() {
+      updateDeleteButtonState();
     });
   });
 }
 
+// 切换诊疗记录详情
+function toggleHisBody(id) {
+  const el = document.getElementById(`his-${id}`);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// 全选/取消全选
 document.getElementById('selectAllBtn').addEventListener('click', function() {
-  let list = document.querySelectorAll('.his-checkbox');
-  let all = Array.from(list).every(c=>c.checked);
-  list.forEach(c=>c.checked = !all);
+  const checkboxes = document.querySelectorAll('.his-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  
+  checkboxes.forEach(cb => {
+    cb.checked = !allChecked;
+  });
+  
+  updateDeleteButtonState();
 });
 
+// 更新删除按钮状态
+function updateDeleteButtonState() {
+  const checkedCount = document.querySelectorAll('.his-checkbox:checked').length;
+  const confirmBtn = document.getElementById('confirmDeleteBtn');
+  
+  if (checkedCount > 0) {
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = '1';
+  } else {
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = '0.6';
+  }
+}
+
+// 确认删除选中记录
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-  let sel = document.querySelectorAll('.his-checkbox:checked');
-  if(sel.length===0){alert("请选择");return;}
-  if(!confirm("删除选中？"))return;
-  let ids = Array.from(sel).map(c=>c.dataset.id);
-  let hs = JSON.parse(localStorage.getItem(getStorageKey(HIS))||"[]");
-  hs = hs.filter(h=>!ids.includes(h.id+""));
-  localStorage.setItem(getStorageKey(HIS), JSON.stringify(hs));
+  if (!confirm('确定删除选中的诊疗记录？')) return;
+  
+  const checkedIds = Array.from(document.querySelectorAll('.his-checkbox:checked'))
+    .map(cb => cb.dataset.id);
+  
+  let his = JSON.parse(localStorage.getItem(getStorageKey(HIS)) || "[]");
+  his = his.filter(item => !checkedIds.includes(item.id.toString()));
+  
+  localStorage.setItem(getStorageKey(HIS), JSON.stringify(his));
   loadHis();
+  alert('删除成功！');
 });
 
-// X光
-document.getElementById('xrayFile').addEventListener('change',function(e){
-  let file = e.target.files[0];
-  if(!file) return;
-  let prev = document.getElementById('xrayPreview');
-  let res = document.getElementById('xrayResult');
-  let url = URL.createObjectURL(file);
-  prev.innerHTML = `<img src="${url}">`;
-  res.innerHTML = "【AI 影像分析】\n骨骼：未见明显骨折\n胸腔：心肺轮廓正常\n腹腔：无明显异物\n提示：仅供兽医参考";
+// 疾病百科数据（优化口腔/呕吐相关说明）
+const diseases = [
+  {name:"一、猫专属疾病",type:"分类",info:"仅猫会发病，狗不感染"},
+  {name:"猫瘟（猫泛白细胞减少症）",type:"猫专属",info:"• 症状：高烧、呕吐、便血、白细胞骤降、脱水\n• 治疗：住院输液、抗病毒、止血、止吐、抗生素\n• 预防：疫苗，每年加强"},
+  {name:"猫鼻支（猫疱疹病毒）",type:"猫专属",info:"• 症状：喷嚏、流脓涕、眼红肿、流泪、发热\n• 治疗：抗病毒药、滴眼液、营养支持\n• 预防：疫苗"},
+  {name:"猫杯状病毒",type:"猫专属",info:"• 症状：口炎、流口水、喷嚏、跛行、发热\n• 治疗：止痛、口腔护理、营养支持\n• 预防：疫苗"},
+  {name:"猫传染性腹膜炎（FIP）",type:"猫专属",info:"• 症状：腹大胸水、发烧消瘦、黄疸、贫血\n• 治疗：靶向药、营养支持\n• 预防：减少应激"},
+  {name:"猫白血病（FeLV）",type:"猫专属",info:"• 症状：贫血、消瘦、发热、免疫力下降\n• 治疗：对症支持、增强免疫\n• 预防：疫苗、避免接触病猫"},
+  {name:"猫免疫缺陷病毒（FIV/猫艾滋）",type:"猫专属",info:"• 症状：反复感染、口炎、消瘦、免疫力低\n• 治疗：对症护理、长期管理\n• 预防：避免打架咬伤"},
+  {name:"猫哮喘",type:"猫专属",info:"• 症状：喘、咳嗽、呼吸急促、腹式呼吸\n• 治疗：抗炎、雾化、支气管扩张剂\n• 预防：减少粉尘、应激"},
+  {name:"猫特发性口炎",type:"猫专属",info:"• 症状：口腔大面积溃烂、剧痛、流口水、拒食\n• 治疗：消炎、止痛、部分拔牙、免疫调节\n• 预防：定期口腔护理"},
+  {name:"猫脂肪肝",type:"猫专属",info:"• 症状：突发不进食、黄疸、呕吐、消瘦\n• 治疗：强制喂食、保肝、营养支持\n• 预防：避免长期不进食"},
+  {name:"猫肥厚性心肌病",type:"猫专属",info:"• 症状：呼吸急促、运动不耐、猝死\n• 治疗：心脏药物、控制心率\n• 预防：定期心超"},
+  {name:"猫动脉血栓",type:"猫专属",info:"• 症状：后腿突然瘫痪、疼痛、爪垫冰冷\n• 治疗：急症，立即抗凝、止痛\n• 预防：心脏疾病管理"},
+  {name:"公猫尿闭",type:"猫专属",info:"• 症状：频繁蹲盆、无尿、惨叫、呕吐、腹胀\n• 治疗：24h致死，必须立刻导尿\n• 预防：多喝水、湿粮、减肥、减压"},
+  {name:"百合中毒",type:"猫专属",info:"• 症状：呕吐、肾衰、死亡\n• 治疗：立即催吐、住院透析\n• 预防：猫环境严禁摆放百合"},
+
+  {name:"二、狗专属疾病",type:"分类",info:"仅狗会发病，猫不感染"},
+  {name:"犬细小病毒",type:"狗专属",info:"• 症状：剧烈呕吐、腥臭血便、脱水、精神萎靡\n• 治疗：立即就医、禁水禁食、大量补液\n• 预防：疫苗"},
+  {name:"犬瘟热",type:"狗专属",info:"• 症状：双相热、眼屎多、咳嗽、脚垫硬、抽搐\n• 治疗：单抗、干扰素、补液\n• 预防：疫苗"},
+  {name:"犬窝咳",type:"狗专属",info:"• 症状：空洞样咳嗽、干呕、精神尚可\n• 治疗：止咳、抗炎\n• 预防：疫苗、保暖"},
+  {name:"犬副流感",type:"狗专属",info:"• 症状：咳嗽、流涕、发热、精神差\n• 治疗：对症止咳、抗炎、抗病毒\n• 预防：疫苗"},
+  {name:"胃扭转",type:"狗专属",info:"• 症状：腹部胀大、干呕、呼吸急促、休克\n• 治疗：几分钟致死，立即手术\n• 预防：少食多餐，饭后不剧烈运动"},
+  {name:"犬心丝虫",type:"狗专属",info:"• 症状：咳嗽、气喘、运动不耐、腹水\n• 治疗：无特效药，预防为主\n• 预防：每月驱虫"},
+  {name:"气管塌陷",type:"狗专属",info:"• 症状：鹅叫样咳嗽、运动后喘\n• 治疗：抗炎、止咳、减重\n• 预防：避免脖链勒颈"},
+  {name:"莱姆病",type:"狗专属",info:"• 症状：发热、关节肿痛、精神差\n• 治疗：抗生素\n• 预防：定期驱虫、防蜱虫"},
+  {name:"钩端螺旋体病",type:"狗专属",info:"• 症状：发热、黄疸、血尿、肝肾损伤\n• 治疗：抗生素、保肝护肾\n• 预防：疫苗、避免接触污染水源"},
+  {name:"犬疱疹病毒",type:"狗专属",info:"• 症状：幼犬腹痛、鸣叫、死亡，成犬轻微症状\n• 治疗：对症支持\n• 预防：保暖、减少应激"},
+
+  {name:"三、猫狗共患疾病",type:"分类",info:"猫犬均会得，部分可传染人"},
+  {name:"狂犬病（可传染人）",type:"共患-病毒性",info:"• 症状：狂躁、流口水、攻击、瘫痪\n• 治疗：100%致死，无药可治\n• 预防：狂犬疫苗"},
+  {name:"跳蚤/蜱虫/螨虫",type:"共患-寄生虫",info:"• 症状：瘙痒、掉毛、皮肤损伤、贫血\n• 治疗：体外驱虫、环境消毒\n• 预防：每月体外驱虫"},
+  {name:"体内蠕虫感染",type:"共患-寄生虫",info:"• 症状：拉稀、消瘦、呕吐虫体、便血\n• 治疗：体内驱虫药\n• 预防：定期体内驱虫"},
+  {name:"贾第虫（可传染人）",type:"共患-寄生虫",info:"• 症状：反复软便、黏液便、腹泻\n• 治疗：抗原虫药\n• 预防：干净饮水"},
+  {name:"猫癣狗癣（可传染人）",type:"共患-皮肤",info:"• 症状：圆形掉毛、皮屑、瘙痒\n• 治疗：药浴、抗真菌药\n• 预防：干燥环境"},
+  {name:"脓皮症/湿疹",type:"共患-皮肤",info:"• 症状：红疹、脓包、破皮、异味\n• 治疗：抗生素、局部护理"},
+  {name:"胰腺炎",type:"共患-消化",info:"• 症状：呕吐、腹痛、拒食、油腻史\n• 治疗：禁食、止痛、护胰\n• 预防：低脂饮食"},
+  {name:"消化道异物梗阻",type:"共患-消化",info:"• 症状：呕吐、便秘、腹胀、腹痛\n• 治疗：拍片、手术/内镜取出\n• 预防：避免啃咬异物"},
+  {name:"泌尿结石",type:"共患-泌尿",info:"• 症状：尿频、尿血、尿痛\n• 治疗：消炎、溶石、手术\n• 预防：多喝水"},
+  {name:"膀胱炎/尿路感染",type:"共患-泌尿",info:"• 症状：尿频、轻微尿血、频繁蹲盆\n• 治疗：消炎、利尿、多喝水\n• 预防：增加饮水"},
+  {name:"肾脏功能衰竭",type:"共患-泌尿",info:"• 症状：口臭氨味、多饮多尿、体重下降、呕吐\n• 治疗：护肾、输液、低磷饮食\n• 预防：定期体检"},
+  {name:"子宫蓄脓（母畜）",type:"共患-生殖",info:"• 症状：腹部胀大、生殖器流脓、多饮多尿\n• 治疗：必须急诊手术\n• 预防：尽早绝育"},
+  {name:"关节/椎间盘问题",type:"共患-骨骼",info:"• 症状：跛行、疼痛、瘫痪、起身困难\n• 治疗：止痛、手术、康复\n• 预防：控制体重"},
+  {name:"中毒",type:"共患-急症",info:"• 症状：呕吐、抽搐、尿血、昏迷\n• 治疗：立即催吐送医\n• 预防：远离有毒物品"},
+  {name:"牙结石/牙周炎",type:"共患-口腔",info:"• 症状：口臭、牙齿发黄、牙龈出血\n• 预防：每天刷牙，多吃干粮"},
+  {name:"呕吐胆汁/急性胃炎",type:"消化",info:"• 典型症状：吐黄沫/黄水、空腹呕吐、精神尚可\n• 常见原因：空腹过久、饮食刺激、轻微肠胃不适\n• 区别：不是中毒/胃扭转特征\n• 处理：禁食6-8小时、益生菌、少量多次饮水"},
+];
+
+// 疾病百科搜索与渲染
+function loadDisease(){
+  let list = diseases;
+  let box = document.getElementById('dList');
+  let kw = document.getElementById('searchD').value.toLowerCase().trim();
+  if(kw){
+    list = diseases.filter(d=>d.name.toLowerCase().includes(kw) || d.info.toLowerCase().includes(kw));
+  }
+  box.innerHTML = list.map(d=>`
+    <div class="d-item">
+      <h4>${d.name}</h4>
+      <div style="font-size:12px;color:#999;">${d.type}</div>
+      <div class="d-body">${d.info}</div>
+    </div>
+  `).join('');
+  box.querySelectorAll('.d-item').forEach(it=>{
+    it.addEventListener('click',()=>{
+      let b = it.querySelector('.d-body');
+      b.style.display = b.style.display=='block'?'none':'block';
+    })
+  })
+}
+
+document.getElementById('searchD').addEventListener('input',loadDisease);
+  
+  // 搜索功能
+  document.getElementById('searchD').addEventListener('input', function() {
+    const keyword = this.value.toLowerCase().trim();
+    const items = document.querySelectorAll('.d-item');
+    
+    items.forEach((item, i) => {
+      const name = diseaseList[i].name.toLowerCase();
+      if (keyword === '' || name.includes(keyword) || diseaseList[i].info.toLowerCase().includes(keyword)) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  });
+}
+
+// 切换疾病详情
+function toggleDisease(index) {
+  const el = document.getElementById(`d-${index}`);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// X光片上传与识别
+document.getElementById('xrayFile').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('xrayPreview');
+    preview.innerHTML = `<img src="${e.target.result}" alt="X光片预览">`;
+    
+    // 模拟X光识别结果
+    const result = document.getElementById('xrayResult');
+    result.textContent = `【X光影像分析结果】
+上传时间：${new Date().toLocaleString()}
+影像类型：${file.name}
+初步分析：
+1. 骨骼结构：未见明显骨折、脱位、骨质增生
+2. 胸腔：心肺轮廓清晰，未见积液、气胸
+3. 腹腔：脏器位置正常，未见明显异常密度影
+
+【建议】
+• 本分析仅为初步筛查，不能替代专业兽医诊断
+• 如有异常症状，建议结合临床检查综合判断
+• 必要时可进一步做CT/MRI检查`;
+  };
+  reader.readAsDataURL(file);
 });
 
-document.addEventListener('DOMContentLoaded', checkLogin);
+// 页面加载时检查登录状态
+window.onload = checkLogin;
 </script>
 </body>
 </html>
